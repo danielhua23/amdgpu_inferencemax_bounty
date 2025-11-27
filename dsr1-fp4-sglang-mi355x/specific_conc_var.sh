@@ -1,0 +1,9 @@
+export MODEL="amd/DeepSeek-R1-0528-MXFP4-Preview"
+export PORT=8888
+export TP=8
+export ISL=1024
+export OSL=1024
+export CONC=16
+export RANDOM_RANGE_RATIO=1.0
+export NUM_PROMPTS=800
+export RESULT_FILENAME="test_$(date +%H%M%S)"
