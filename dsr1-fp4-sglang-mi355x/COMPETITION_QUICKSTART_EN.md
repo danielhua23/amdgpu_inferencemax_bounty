@@ -27,7 +27,7 @@
 
 ## Objective
 
-Optimize SGLang inference performance on AMD MI355X GPUs while maintaining model accuracy.
+Optimize inference performance of dsr1-fp4 model using sglang on AMD MI355X GPUs while maintaining model accuracy.
 
 ## 📌 Important Notice
 
