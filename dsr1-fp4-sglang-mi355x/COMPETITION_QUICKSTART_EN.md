@@ -31,7 +31,7 @@ Optimize inference performance of dsr1-fp4 model using sglang on AMD MI355X GPUs
 
 ## 📌 Important Notice
 
-This competition's benchmark **aligns with the [InferenceMAX](https://github.com/semianalysis/InferenceMAX)** repository's AMD MI355X test configuration and will be synchronized with InferenceMAX updates.
+This competition's benchmark **aligns with the [InferenceMAX](https://github.com/InferenceMAX/InferenceMAX)** repository's AMD MI355X test configuration and will be synchronized with InferenceMAX updates.
 
 ## Core Files
 
