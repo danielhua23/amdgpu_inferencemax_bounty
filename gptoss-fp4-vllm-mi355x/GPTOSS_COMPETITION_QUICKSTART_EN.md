@@ -31,7 +31,7 @@ Optimize vLLM inference performance for GPT-OSS 120B FP4 model on AMD MI355X GPU
 
 ## 📌 Important Notice
 
-This competition's benchmark **aligns with the [InferenceMAX](https://github.com/semianalysis/InferenceMAX)** repository's AMD MI355X test configuration and will be synchronized with InferenceMAX updates.
+This competition's benchmark **aligns with the [InferenceMAX](https://github.com/InferenceMAX/InferenceMAX)** repository's AMD MI355X test configuration and will be synchronized with InferenceMAX updates.
 
 **Model Specifics**:
 - **Model**: `openai/gpt-oss-120b` (FP4 quantized)
