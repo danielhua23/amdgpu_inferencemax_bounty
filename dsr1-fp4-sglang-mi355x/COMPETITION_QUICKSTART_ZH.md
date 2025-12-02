@@ -31,7 +31,7 @@
 
 ## 📌 重要说明
 
-本竞赛的测试基准**对齐 [InferenceMAX](https://github.com/semianalysis/InferenceMAX)** 仓库的 AMD MI355X 测试配置，并会随着 InferenceMAX 的更新而同步更新。
+本竞赛的测试基准**对齐 [InferenceMAX](https://github.com/InferenceMAX/InferenceMAX)** 仓库的 AMD MI355X 测试配置，并会随着 InferenceMAX 的更新而同步更新。
 
 ## 核心文件
 
