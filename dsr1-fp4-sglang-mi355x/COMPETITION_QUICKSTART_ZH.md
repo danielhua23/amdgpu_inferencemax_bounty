@@ -154,11 +154,11 @@ python setup_rocm.py install
 开发阶段（快速迭代）
   ↓
 1. 单配置测试并提交（方式 1）
-   - 用 submit 模式测试单个配置（~20分钟）
+   - 用 submit 模式测试单个 CONC 配置（~20分钟）
    - 自动提交到 Leaderboard，实时查看排名
   ↓
 2. 多并发批量测试并提交（方式 2）
-   - 用 submit 模式测试所有 CONC（~2小时/ISL-OSL）
+   - 用 submit 模式测试所有 CONC 配置（~2小时/ISL-OSL）
    - 自动提交所有结果
   ↓
 完成！实时查看 Leaderboard 排名 🎉
@@ -184,9 +184,12 @@ source specific_conc_var.sh
 # 2. 启动 SGLang 服务器（首次启动需要 20+ 分钟 JIT 编译）
 bash launch_sglang_server.sh
 
-# 等待服务器就绪后（看到 "Uvicorn running..."），运行测试
+# 等待服务器就绪后（看到 "application startup..."）
+# 3. 另起一个窗口并在该窗口重新加载环境变量
+docker exec -ti sglang-dev bash
+source specific_conc_var.sh
 
-# 3. 推荐：直接测试并提交（~20-30分钟）⭐
+# 4. 推荐：直接测试并提交（~20-30分钟）⭐
 ./dsr1_benchmark submit "YourTeam"
 
 # 可选：如果只想快速验证准确性（~5-10分钟）
@@ -220,10 +223,13 @@ source all_conc_var.sh
 # 2. 启动 SGLang 服务器（首次启动需要 20+ 分钟 JIT 编译）
 bash launch_sglang_server.sh
 
-# 等待服务器就绪后（看到 "Uvicorn running..."），运行以下命令
-
 # ========== 推荐：直接测试并提交（一步到位）========== 
+# 等待服务器就绪后（看到 "application startup..."）
+# 3. 另起一个窗口并在该窗口重新加载环境变量
+docker exec -ti sglang-dev bash
+source specific_conc_var.sh
 
+# 4. 测试
 # 提交 ISL=1024, OSL=1024 的所有结果（自动跑 CONC=4,8,16,32,64，~2小时）
 ./dsr1_benchmark submit "YourTeam" -isl 1024 -osl 1024
 
@@ -355,10 +361,13 @@ source all_conc_var.sh
 # 2. 启动 SGLang 服务器
 bash launch_sglang_server.sh
 
-# 等待服务器就绪后（查看日志 "Uvicorn running..."），运行以下命令
+# 等待服务器就绪后（看到 "application startup..."）
+# 3. 另起一个窗口并在该窗口重新加载环境变量
+docker exec -ti sglang-dev bash
+source specific_conc_var.sh
 
 # ========== 推荐：直接测试并提交（一步到位）========== 
-
+# 4.
 # 提交 ISL=1024, OSL=1024 的所有结果（自动测试 CONC=4,8,16,32,64，~2小时）
 ./dsr1_benchmark submit "YourTeam" -isl 1024 -osl 1024
 
@@ -572,7 +581,7 @@ export NUM_PROMPTS=3200
 
 ## 资源链接
 
-- 📖 [InferenceMAX 官方仓库](https://github.com/semianalysis/InferenceMAX) - 测试基准参考
+- 📖 [InferenceMAX 官方仓库](https://github.com/InferenceMAX/InferenceMAX) - 测试基准参考
 - 🔧 [SGLang GitHub](https://github.com/sgl-project/sglang) - 推理框架
 - 📊 Leaderboards:
   - [ISL=1024, OSL=1024](https://daniehua-dsr1-fp4-sgl-isl1024osl1024.hf.space)

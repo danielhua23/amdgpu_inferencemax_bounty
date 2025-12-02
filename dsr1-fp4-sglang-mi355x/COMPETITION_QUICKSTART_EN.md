@@ -154,7 +154,7 @@ python setup_rocm.py install
 Development Phase (Rapid Iteration)
   ↓
 1. Single Config Test & Submit (Approach 1)
-   - Use submit mode to test single config (~20 mins)
+   - Use submit mode to test single value (~20 mins)
    - Auto-submit to Leaderboard, view ranking in real-time
   ↓
 2. Multi-Concurrency Batch Test & Submit (Approach 2)
@@ -173,7 +173,7 @@ Done! View Leaderboard rankings in real-time 🎉
 
 #### Approach 1: Single Config Test (Quick Validation) ⚡
 
-**Use Case**: Quickly validate single configuration performance during development
+**Use Case**: Quickly validate single CONC config performance during development
 
 ```bash
 cd /workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x
@@ -184,9 +184,11 @@ source specific_conc_var.sh
 # 2. Launch SGLang server (first launch needs 20+ mins for JIT compilation)
 bash launch_sglang_server.sh
 
-# Wait for server ready (see "Uvicorn running..."), then run tests
-
-# 3. Recommended: Test and submit directly (~20-30 mins) ⭐
+# Wait for server ready (see "application startup..."）, then open a new window to run tests
+# 3. go into new windown and reload env var
+docker exec -ti sglang-dev bash
+source specific_conc_var.sh
+# 4. Recommended: Test and submit directly (~20-30 mins) ⭐
 ./dsr1_benchmark submit "YourTeam"
 
 # Optional: Quick accuracy validation only (~5-10 mins)
@@ -220,11 +222,13 @@ source all_conc_var.sh
 # 2. Launch SGLang server (first launch needs 20+ mins for JIT compilation)
 bash launch_sglang_server.sh
 
-# Wait for server ready (see "Uvicorn running..."), then run the following commands
-
 # ========== Recommended: Test and submit directly (all-in-one) ========== 
+# Wait for server ready (see "application startup..."）, then open a new window to run tests
+# 3. go into new windown and reload env var
+docker exec -ti sglang-dev bash
+source specific_conc_var.sh
 
-# Submit all results for ISL=1024, OSL=1024 (auto-run CONC=4,8,16,32,64, ~2 hours)
+# 4. Submit all results for ISL=1024, OSL=1024 (auto-run CONC=4,8,16,32,64, ~2 hours)
 ./dsr1_benchmark submit "YourTeam" -isl 1024 -osl 1024
 
 # Submit all results for ISL=1024, OSL=8192 (auto-run CONC=4,8,16,32,64, ~2 hours)
@@ -355,10 +359,12 @@ source all_conc_var.sh
 # 2. Launch SGLang server
 bash launch_sglang_server.sh
 
-# Wait for server ready (see log "Uvicorn running..."), then run the following commands
-
 # ========== Recommended: Test and submit directly (all-in-one) ========== 
-
+# Wait for server ready (see "application startup..."）, then open a new window to run tests
+# 3. go into new window and reload env var
+docker exec -ti sglang-dev bash
+source specific_conc_var.sh
+# 4.
 # Submit all results for ISL=1024, OSL=1024 (auto-test CONC=4,8,16,32,64, ~2 hours)
 ./dsr1_benchmark submit "YourTeam" -isl 1024 -osl 1024
 
@@ -572,7 +578,7 @@ Round 5: Batch Submission
 
 ## Resource Links
 
-- 📖 [InferenceMAX Official Repository](https://github.com/semianalysis/InferenceMAX) - Benchmark reference
+- 📖 [InferenceMAX Official Repository](https://github.com/InferenceMAX/InferenceMAX) - Benchmark reference
 - 🔧 [SGLang GitHub](https://github.com/sgl-project/sglang) - Inference framework
 - 📊 Leaderboards:
   - [ISL=1024, OSL=1024](https://daniehua-dsr1-fp4-sgl-isl1024osl1024.hf.space)

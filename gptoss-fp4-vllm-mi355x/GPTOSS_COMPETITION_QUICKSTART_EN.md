@@ -163,11 +163,11 @@ python3 setup.py develop
 Development Phase (Rapid Iteration)
   ↓
 1. Single Config Test & Submit (Approach 1)
-   - Use submit mode to test single config (~15-20 mins)
+   - Use submit mode to test single CONC config (~15-20 mins)
    - Auto-submit to Leaderboard, view ranking in real-time
   ↓
 2. Multi-Concurrency Batch Test & Submit (Approach 2)
-   - Use submit mode to test all CONC (~1-2 hours/ISL-OSL)
+   - Use submit mode to test all CONC configs(~1-2 hours/ISL-OSL)
    - Auto-submit all results
   ↓
 Done! View Leaderboard rankings in real-time 🎉
@@ -193,9 +193,12 @@ source specific_conc_var.sh
 # 2. Launch vLLM server (first launch needs 20+ mins for JIT compilation)
 bash launch_vllm_server.sh
 
-# Wait for server ready (see "Uvicorn running..."), then run tests
+# Wait for server ready (see "application startup..."）, then open a new window to run tests
+# 3. go into new window and reload env var
+docker exec -ti vllm-dev bash
+source specific_conc_var.sh
 
-# 3. Recommended: Test and submit directly (~15-20 mins) ⭐
+# 4. Recommended: Test and submit directly (~15-20 mins) ⭐
 ./gptoss_benchmark submit "YourTeam"
 
 # Optional: Quick accuracy validation only (~5-10 mins)
@@ -229,10 +232,13 @@ source all_conc_var.sh
 # 2. Launch vLLM server (first launch needs 20+ mins for JIT compilation)
 bash launch_vllm_server.sh
 
-# Wait for server ready (see "Uvicorn running..."), then run the following commands
-
 # ========== Recommended: Test and submit directly (all-in-one) ========== 
+# Wait for server ready (see "application startup..."）, then open a new window to run tests
+# 3. go into new window and reload env var
+docker exec -ti sglang-dev bash
+source specific_conc_var.sh
 
+# 4.
 # Submit all results for ISL=1024, OSL=1024 (auto-run CONC=4,8,16, ~1 hour)
 ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 1024
 
@@ -373,9 +379,11 @@ source all_conc_var.sh
 # 2. Launch vLLM server
 bash launch_vllm_server.sh
 
-# Wait for server ready (see log "Uvicorn running..."), then run the following commands
-
 # ========== Recommended: Test and submit directly (all-in-one) ========== 
+# Wait for server ready (see "application startup..."）, then open a new window to run tests
+# 3. go into new window and reload env var
+docker exec -ti sglang-dev bash
+source specific_conc_var.sh
 
 # Submit all results for ISL=1024, OSL=1024 (auto-test CONC=4,8,16, ~1 hour)
 ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 1024
@@ -606,7 +614,7 @@ Round 5: Batch Submission
 
 ## Resource Links
 
-- 📖 [InferenceMAX Official Repository](https://github.com/semianalysis/InferenceMAX) - Benchmark reference
+- 📖 [InferenceMAX Official Repository](https://github.com/InferenceMAX/InferenceMAX) - Benchmark reference
 - 🔧 [vLLM GitHub](https://github.com/vllm-project/vllm) - Inference framework
 - 🔧 [AITER GitHub](https://github.com/ROCm/aiter) - AMD GPU operator library
 - 📊 Leaderboards:
