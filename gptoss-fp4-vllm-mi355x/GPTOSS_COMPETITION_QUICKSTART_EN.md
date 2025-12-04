@@ -115,9 +115,8 @@ Install vLLM:
 # Enter vLLM directory
 cd /workspace/vllm
 
-# Install dependencies
+# Upgrade pip
 pip install --upgrade pip
-pip install -r requirements/rocm.txt
 
 # Install vLLM (editable mode)
 pip install --upgrade numba \
@@ -125,7 +124,8 @@ pip install --upgrade numba \
     huggingface-hub[cli,hf_transfer] \
     setuptools_scm
 pip install "numpy<2"
-
+# Install dependencies
+pip install -r requirements/rocm.txt
 # Build vLLM for MI GPU
 export PYTORCH_ROCM_ARCH="gfx942;gfx950"
 python3 setup.py develop
@@ -135,7 +135,9 @@ python -c "import vllm; print(vllm.__file__)"
 # Expected output: /workspace/vllm/vllm/__init__.py
 ```
 
->note: you might encounter errors like: ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts. transformers 4.56.2 requires huggingface-hub<1.0,>=0.34.0, but you have huggingface-hub 1.1.5 which is incompatible. vllm 0.11.2.dev346+g18523b87f.rocm702 requires numba==0.61.2, but you have numba 0.62.1 which is incompatible. **Just try pip install transformers -U**
+>note: you might meet some error like : ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts. transformers 4.56.2 requires huggingface-hub<1.0,>=0.34.0, but you have huggingface-hub 1.1.5 which is incompatible. vllm 0.11.2.dev346+g18523b87f.rocm702 requires numba==0.61.2, but you have numba 0.62.1 which is incompatible. **Just try pip install tranformers -U**
+
+>note: you might meet some error like : ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts. vllm 0.9.2rc2.dev2065+g4f43dae12.rocm700 requires outlines_core==0.2.10, but you have outlines-core 0.1.26 which is incompatible. vllm 0.9.2rc2.dev2065+g4f43dae12.rocm700 requires xgrammar==0.1.21; platform_machine == "x86_64" or platform_machine == "aarch64" or platform_machine == "arm64", but you have xgrammar 0.1.27 which is incompatible.**Just ignore it**
 
 ### 4️⃣ Example: How to Recompile After Code Modifications
 
@@ -149,9 +151,10 @@ vim vllm/engine/llm_engine.py
 
 # If you modified C++/CUDA/HIP extensions, need to recompile:
 cd /workspace/vllm
-rm -r vllm/*.so
 rm -r ./build
+rm -r ./vllm.egg-info
 pip uninstall -y vllm
+python3 setup.py clean
 python3 setup.py develop
 ```
 

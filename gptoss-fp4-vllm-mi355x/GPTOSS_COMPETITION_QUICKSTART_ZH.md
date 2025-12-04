@@ -115,9 +115,8 @@ aiter                             0.1.7.post3.dev39+g1f5b378dc        /workspace
 # 进入 vLLM 目录
 cd /workspace/vllm
 
-# 安装依赖
+# 升级pip
 pip install --upgrade pip
-pip install -r requirements/rocm.txt
 
 # 安装 vLLM（可编辑模式）
 pip install --upgrade numba \
@@ -125,7 +124,8 @@ pip install --upgrade numba \
     huggingface-hub[cli,hf_transfer] \
     setuptools_scm
 pip install "numpy<2"
-
+# 安装依赖
+pip install -r requirements/rocm.txt
 # Build vLLM for MI GPU
 export PYTORCH_ROCM_ARCH="gfx942;gfx950"
 python3 setup.py develop
@@ -151,9 +151,10 @@ vim vllm/engine/llm_engine.py
 
 # 如果修改了 C++/CUDA/HIP 扩展，需要重新编译：
 cd /workspace/vllm
-rm -r vllm/*.so
 rm -r ./build
+rm -r ./vllm.egg-info
 pip uninstall -y vllm
+python3 setup.py clean
 python3 setup.py develop
 ```
 
