@@ -135,9 +135,7 @@ python -c "import vllm; print(vllm.__file__)"
 # 期望输出: /workspace/vllm/vllm/__init__.py
 ```
 
->note: you might meet some error like : ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts. transformers 4.56.2 requires huggingface-hub<1.0,>=0.34.0, but you have huggingface-hub 1.1.5 which is incompatible. vllm 0.11.2.dev346+g18523b87f.rocm702 requires numba==0.61.2, but you have numba 0.62.1 which is incompatible. **Just try pip install tranformers -U**
-
->note: you might meet some error like : ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts. vllm 0.9.2rc2.dev2065+g4f43dae12.rocm700 requires outlines_core==0.2.10, but you have outlines-core 0.1.26 which is incompatible. vllm 0.9.2rc2.dev2065+g4f43dae12.rocm700 requires xgrammar==0.1.21; platform_machine == "x86_64" or platform_machine == "aarch64" or platform_machine == "arm64", but you have xgrammar 0.1.27 which is incompatible.**Just ignore it**
+>note: you might meet some **error** like : ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts. transformers 4.56.2 requires huggingface-hub<1.0,>=0.34.0, but you have huggingface-hub 1.1.7 which is incompatible..**Just ignore it**
 
 ### 4️⃣ 示例: 修改代码后如何recompile
 
