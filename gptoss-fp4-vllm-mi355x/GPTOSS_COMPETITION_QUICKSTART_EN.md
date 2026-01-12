@@ -237,8 +237,8 @@ bash launch_vllm_server.sh
 # ========== Recommended: Test and submit directly (all-in-one) ========== 
 # Wait for server ready (see "application startup..."）, then open a new window to run tests
 # 3. go into new window and reload env var
-docker exec -ti sglang-dev bash
-source specific_conc_var.sh
+docker exec -ti vllm-dev bash
+source all_conc_var.sh
 
 # 4.
 # Submit all results for ISL=1024, OSL=1024 (auto-run CONC=4,8,16, ~1 hour)
