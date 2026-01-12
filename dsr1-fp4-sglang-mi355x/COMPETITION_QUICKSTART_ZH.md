@@ -227,7 +227,7 @@ bash launch_sglang_server.sh
 # 等待服务器就绪后（看到 "application startup..."）
 # 3. 另起一个窗口并在该窗口重新加载环境变量
 docker exec -ti sglang-dev bash
-source specific_conc_var.sh
+source all_conc_var.sh
 
 # 4. 测试
 # 提交 ISL=1024, OSL=1024 的所有结果（自动跑 CONC=4,8,16,32,64，~2小时）
