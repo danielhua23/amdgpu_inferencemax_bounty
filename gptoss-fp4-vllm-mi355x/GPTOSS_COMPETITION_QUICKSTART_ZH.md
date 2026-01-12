@@ -236,7 +236,7 @@ bash launch_vllm_server.sh
 # 等待服务器就绪后（看到 "application startup..."）
 # 3. 另起一个窗口并在该窗口重新加载环境变量
 docker exec -ti vllm-dev bash
-source specific_conc_var.sh
+source all_conc_var.sh
 
 # ========== 推荐：直接测试并提交（一步到位）========== 
 
