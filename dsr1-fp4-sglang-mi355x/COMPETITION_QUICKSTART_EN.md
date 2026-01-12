@@ -226,7 +226,7 @@ bash launch_sglang_server.sh
 # Wait for server ready (see "application startup..."）, then open a new window to run tests
 # 3. go into new windown and reload env var
 docker exec -ti sglang-dev bash
-source specific_conc_var.sh
+source all_conc_var.sh
 
 # 4. Submit all results for ISL=1024, OSL=1024 (auto-run CONC=4,8,16,32,64, ~2 hours)
 ./dsr1_benchmark submit "YourTeam" -isl 1024 -osl 1024
