@@ -35,6 +35,7 @@ export ISL=1024
 export OSL=1024
 
 # Concurrency Level
+# we have 4,8,16,32,64
 export CONC=8
 
 # Random Range Ratio
