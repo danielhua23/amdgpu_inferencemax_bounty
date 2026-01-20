@@ -29,7 +29,7 @@ fi
 
 if [[ -z "$PORT" ]]; then
     echo "WARNING: PORT not set, using default: 8888"
-    PORT=8888
+    PORT=8878
 fi
 
 if [[ -z "$TP" ]]; then
