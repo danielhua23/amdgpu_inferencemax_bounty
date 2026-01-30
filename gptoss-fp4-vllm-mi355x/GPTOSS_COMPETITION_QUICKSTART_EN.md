@@ -241,24 +241,24 @@ docker exec -ti vllm-dev bash
 source all_conc_var.sh
 
 # 4.
-# Submit all results for ISL=1024, OSL=1024 (auto-run CONC=4,8,16, ~1 hour)
+# Submit all results for ISL=1024, OSL=1024 (auto-run CONC=4,8,16,32,64,256, ~2 hours)
 ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 1024
 
-# Submit all results for ISL=1024, OSL=8192 (auto-run CONC=4,8,16, ~1 hour)
+# Submit all results for ISL=1024, OSL=8192 (auto-run CONC=4,8,16,32,64,256, ~2 hours)
 ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 8192
 
-# Submit all results for ISL=8192, OSL=1024 (auto-run CONC=4,8, ~40 mins)
+# Submit all results for ISL=8192, OSL=1024 (auto-run CONC=4,8,16,32,64,256, ~2 hours)
 ./gptoss_benchmark submit "YourTeam" -isl 8192 -osl 1024
 
 # ========== Optional: Test without submitting, use perf mode ========== 
 
-# Test ISL=1024, OSL=1024 (no submit, ~1 hour)
+# Test ISL=1024, OSL=1024 (no submit, ~2 hours)
 ./gptoss_benchmark perf -isl 1024 -osl 1024
 
-# Test ISL=1024, OSL=8192 (no submit, ~1 hour)
+# Test ISL=1024, OSL=8192 (no submit, ~2 hours)
 ./gptoss_benchmark perf -isl 1024 -osl 8192
 
-# Test ISL=8192, OSL=1024 (no submit, ~40 mins)
+# Test ISL=8192, OSL=1024 (no submit, ~2 hours)
 ./gptoss_benchmark perf -isl 8192 -osl 1024
 ```
 
@@ -273,26 +273,24 @@ source all_conc_var.sh
 - Accuracy metrics: bits_per_byte, byte_perplexity, word_perplexity
 
 **CONC Range Explanation**:
-- ISL=1024, OSL=1024: CONC=4,8,16 (3 configs)
-- ISL=1024, OSL=8192: CONC=4,8,16 (3 configs)
-- ISL=8192, OSL=1024: CONC=4,8 (2 configs) ⚠️ Note: 8192-1024 only tests CONC=4,8
+- All ISL-OSL combinations: CONC=4,8,16,32,64,256 (6 configs each)
 
 ## Test Mode Comparison
 
 | Mode | Command Example | What Runs | Time (Single Config)| Use Case |
 |------|---------|---------|-------------|---------|
 | **submit** ⭐ | `./gptoss_benchmark submit "Team"` | Accuracy + Performance + Submit | ~15-20 mins | **Recommended: All-in-one, view ranking real-time** |
-| **submit -isl -osl** ⭐ | `./gptoss_benchmark submit "Team" -isl 1024 -osl 1024` | Auto-test 3 CONC + Submit | ~1 hour | **Recommended: Batch test and submit** |
+| **submit -isl -osl** ⭐ | `./gptoss_benchmark submit "Team" -isl 1024 -osl 1024` | Auto-test 6 CONC + Submit | ~2 hours | **Recommended: Batch test and submit** |
 | **acc** | `./gptoss_benchmark acc` | Accuracy test only | ~5-10 mins | Optional: Quick accuracy validation |
 | **perf** | `./gptoss_benchmark perf` | Accuracy + Performance (no submit) | ~15-20 mins | Optional: Test performance without submitting |
-| **perf -isl -osl** | `./gptoss_benchmark perf -isl 1024 -osl 1024` | Auto-test 3 CONC (no submit) | ~1 hour | Optional: Batch test without submitting |
+| **perf -isl -osl** | `./gptoss_benchmark perf -isl 1024 -osl 1024` | Auto-test 6 CONC (no submit) | ~2 hours | Optional: Batch test without submitting |
 
 ## Two Testing Approaches Comparison
 
 | Approach | Recommended Command | Configs | Time Estimate | Recommended Scenario |
 |------|---------|-------|---------|---------|
 | **Approach 1: Single Config** ⭐ | `./gptoss_benchmark submit "Team"` | 1 | ~15-20 mins | **Development phase rapid iteration** |
-| **Approach 2: Multi-Concurrency** ⭐ | `./gptoss_benchmark submit "Team" -isl 1024 -osl 1024` | 3 | ~1 hour | **Batch test all CONC** |
+| **Approach 2: Multi-Concurrency** ⭐ | `./gptoss_benchmark submit "Team" -isl 1024 -osl 1024` | 6 | ~2 hours | **Batch test all CONC** |
 
 **Recommended Workflow** 🎯:
 1. **Development Phase**: Use **Approach 1** (single config + submit) for rapid iteration, view Leaderboard real-time
@@ -387,13 +385,13 @@ bash launch_vllm_server.sh
 docker exec -ti sglang-dev bash
 source specific_conc_var.sh
 
-# Submit all results for ISL=1024, OSL=1024 (auto-test CONC=4,8,16, ~1 hour)
+# Submit all results for ISL=1024, OSL=1024 (auto-test CONC=4,8,16,32,64,256, ~2 hours)
 ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 1024
 
-# Submit all results for ISL=1024, OSL=8192 (auto-test CONC=4,8,16, ~1 hour)
+# Submit all results for ISL=1024, OSL=8192 (auto-test CONC=4,8,16,32,64,256, ~2 hours)
 ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 8192
 
-# Submit all results for ISL=8192, OSL=1024 (auto-test CONC=4,8, ~40 mins)
+# Submit all results for ISL=8192, OSL=1024 (auto-test CONC=4,8,16,32,64,256, ~2 hours)
 ./gptoss_benchmark submit "YourTeam" -isl 8192 -osl 1024
 ```
 
@@ -438,8 +436,8 @@ Testing CONC=8
 ============================================
 Multi-Concurrency Test Complete!
 ============================================
-Total tests: 3
-Passed: 3
+Total tests: 6
+Passed: 6
 Failed: 0
 
 Results saved in: batch_isl1024_osl1024_20251127_150000/
@@ -546,17 +544,16 @@ export NUM_PROMPTS=160  # GPT-OSS: CONC * 10
 - **perf mode**: ~15-20 mins (Optional: Test without submitting)
 
 **Multi-Concurrency Test (per ISL-OSL combination)**:
-- **ISL=1024, OSL=1024 (3 CONC)**: ~15-20 mins/CONC × 3 = **~1 hour** ⭐
-- **ISL=1024, OSL=8192 (3 CONC)**: ~15-20 mins/CONC × 3 = **~1 hour** ⭐
-- **ISL=8192, OSL=1024 (2 CONC)**: ~15-20 mins/CONC × 2 = **~40 mins** ⭐
+**Multi-Concurrency Test (per ISL-OSL combination, 6 CONC values)**:
+- **All ISL-OSL combinations (6 CONC each)**: ~15-20 mins/CONC × 6 = **~2 hours** ⭐
 
-**All 3 ISL-OSL Combinations** (8 configs):
-- **submit mode**: ~1 hour + ~1 hour + ~40 mins = **~2.5-3 hours** ⭐
+**All 3 ISL-OSL Combinations** (18 configurations):
+- **submit mode**: ~2 hours × 3 = **~6 hours** ⭐
 
 **Recommended Workflow** 🎯:
 1. **Development Phase**: Single config `submit "YourTeam"` rapid iteration (~15-20 mins/time)
    - See Leaderboard ranking immediately, quickly validate optimization effects
-2. **Batch Submission**: Multi-conc `submit "YourTeam" -isl -osl` submit all configs (~1 hour/combination)
+2. **Batch Submission**: Multi-conc `submit "YourTeam" -isl -osl` submit all configs (~2 hours/combination)
    - Complete testing and submission at once, can run overnight
 
 💡 **Why use submit directly?**

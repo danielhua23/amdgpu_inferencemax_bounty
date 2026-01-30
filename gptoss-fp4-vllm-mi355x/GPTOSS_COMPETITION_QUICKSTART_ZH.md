@@ -240,24 +240,24 @@ source all_conc_var.sh
 
 # ========== 推荐：直接测试并提交（一步到位）========== 
 
-# 提交 ISL=1024, OSL=1024 的所有结果（自动跑 CONC=4,8,16，~1小时）
+# 提交 ISL=1024, OSL=1024 的所有结果（自动跑 CONC=4,8,16,32,64,256，~2小时）
 ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 1024
 
-# 提交 ISL=1024, OSL=8192 的所有结果（自动跑 CONC=4,8,16，~1小时）
+# 提交 ISL=1024, OSL=8192 的所有结果（自动跑 CONC=4,8,16,32,64,256，~2小时）
 ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 8192
 
-# 提交 ISL=8192, OSL=1024 的所有结果（自动跑 CONC=4,8，~40分钟）
+# 提交 ISL=8192, OSL=1024 的所有结果（自动跑 CONC=4,8,16,32,64,256，~2小时）
 ./gptoss_benchmark submit "YourTeam" -isl 8192 -osl 1024
 
 # ========== 可选：如果只想测试不提交，用 perf 模式 ========== 
 
-# 测试 ISL=1024, OSL=1024（不提交，~1小时）
+# 测试 ISL=1024, OSL=1024（不提交，~2小时）
 ./gptoss_benchmark perf -isl 1024 -osl 1024
 
-# 测试 ISL=1024, OSL=8192（不提交，~1小时）
+# 测试 ISL=1024, OSL=8192（不提交，~2小时）
 ./gptoss_benchmark perf -isl 1024 -osl 8192
 
-# 测试 ISL=8192, OSL=1024（不提交，~40分钟）
+# 测试 ISL=8192, OSL=1024（不提交，~2小时）
 ./gptoss_benchmark perf -isl 8192 -osl 1024
 ```
 
@@ -272,26 +272,24 @@ source all_conc_var.sh
 - 准确性指标：bits_per_byte, byte_perplexity, word_perplexity
 
 **CONC 范围说明**：
-- ISL=1024, OSL=1024: CONC=4,8,16（3个配置）
-- ISL=1024, OSL=8192: CONC=4,8,16（3个配置）
-- ISL=8192, OSL=1024: CONC=4,8（2个配置）⚠️ 注意：8192-1024 只测试 CONC=4,8
+- 所有 ISL-OSL 组合：CONC=4,8,16,32,64,256（每个6个配置）
 
 ## 测试模式对比
 
 | 模式 | 命令示例 | 运行内容 | 耗时（单配置）| 使用场景 |
 |------|---------|---------|-------------|---------|
 | **submit** ⭐ | `./gptoss_benchmark submit "Team"` | 准确性 + 性能 + 提交 | ~15-20分钟 | **推荐：一步到位，实时查看排名** |
-| **submit -isl -osl** ⭐ | `./gptoss_benchmark submit "Team" -isl 1024 -osl 1024` | 自动测试 3 个 CONC + 提交 | ~1小时 | **推荐：批量测试并提交** |
+| **submit -isl -osl** ⭐ | `./gptoss_benchmark submit "Team" -isl 1024 -osl 1024` | 自动测试 6 个 CONC + 提交 | ~2小时 | **推荐：批量测试并提交** |
 | **acc** | `./gptoss_benchmark acc` | 仅准确性测试 | ~5-10分钟 | 可选：快速验证准确性 |
 | **perf** | `./gptoss_benchmark perf` | 准确性 + 性能（不提交）| ~15-20分钟 | 可选：测试性能但不提交 |
-| **perf -isl -osl** | `./gptoss_benchmark perf -isl 1024 -osl 1024` | 自动测试 3 个 CONC（不提交）| ~1小时 | 可选：批量测试但不提交 |
+| **perf -isl -osl** | `./gptoss_benchmark perf -isl 1024 -osl 1024` | 自动测试 6 个 CONC（不提交）| ~2小时 | 可选：批量测试但不提交 |
 
 ## 两种测试方式对比
 
 | 方式 | 推荐命令 | 配置数 | 耗时估算 | 推荐场景 |
 |------|---------|-------|---------|---------|
 | **方式 1: 单配置** ⭐ | `./gptoss_benchmark submit "Team"` | 1个 | ~15-20分钟 | **开发阶段快速迭代** |
-| **方式 2: 多并发** ⭐ | `./gptoss_benchmark submit "Team" -isl 1024 -osl 1024` | 3个 | ~1小时 | **批量测试所有CONC** |
+| **方式 2: 多并发** ⭐ | `./gptoss_benchmark submit "Team" -isl 1024 -osl 1024` | 6个 | ~2小时 | **批量测试所有CONC** |
 
 **推荐工作流程** 🎯：
 1. **开发阶段**：使用**方式 1**（单配置 + submit）快速迭代，实时查看 Leaderboard
@@ -387,13 +385,13 @@ source specific_conc_var.sh
 
 # ========== 推荐：直接测试并提交（一步到位）========== 
 
-# 提交 ISL=1024, OSL=1024 的所有结果（自动测试 CONC=4,8,16，~1小时）
+# 提交 ISL=1024, OSL=1024 的所有结果（自动测试 CONC=4,8,16,32,64,256，~2小时）
 ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 1024
 
-# 提交 ISL=1024, OSL=8192 的所有结果（自动测试 CONC=4,8,16，~1小时）
+# 提交 ISL=1024, OSL=8192 的所有结果（自动测试 CONC=4,8,16,32,64,256，~2小时）
 ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 8192
 
-# 提交 ISL=8192, OSL=1024 的所有结果（自动测试 CONC=4,8，~40分钟）
+# 提交 ISL=8192, OSL=1024 的所有结果（自动测试 CONC=4,8,16,32,64,256，~2小时）
 ./gptoss_benchmark submit "YourTeam" -isl 8192 -osl 1024
 ```
 
@@ -438,8 +436,8 @@ Testing CONC=8
 ============================================
 Multi-Concurrency Test Complete!
 ============================================
-Total tests: 3
-Passed: 3
+Total tests: 6
+Passed: 6
 Failed: 0
 
 Results saved in: batch_isl1024_osl1024_20251127_150000/
@@ -546,17 +544,16 @@ export NUM_PROMPTS=160  # GPT-OSS: CONC * 10
 - **perf 模式**: ~15-20分钟（可选：测试但不提交）
 
 **多并发测试（每个 ISL-OSL 组合）**：
-- **ISL=1024, OSL=1024 (3个CONC)**: ~15-20分钟/CONC × 3 = **~1小时** ⭐
-- **ISL=1024, OSL=8192 (3个CONC)**: ~15-20分钟/CONC × 3 = **~1小时** ⭐
-- **ISL=8192, OSL=1024 (2个CONC)**: ~15-20分钟/CONC × 2 = **~40分钟** ⭐
+**多并发测试（每个 ISL-OSL 组合，6 个 CONC 值）**：
+- **所有 ISL-OSL 组合（每个6个CONC）**: ~15-20分钟/CONC × 6 = **~2小时** ⭐
 
-**全部 3 个 ISL-OSL 组合**（8 个配置）：
-- **submit 模式**: ~1小时 + ~1小时 + ~40分钟 = **~2.5-3小时** ⭐
+**全部 3 个 ISL-OSL 组合**（18 个配置）：
+- **submit 模式**: ~2小时 × 3 = **~6小时** ⭐
 
 **推荐工作流** 🎯：
 1. **开发阶段**：单配置 `submit "YourTeam"` 快速迭代（~15-20分钟/次）
    - 立即看到 Leaderboard 排名，快速验证优化效果
-2. **批量提交**：多并发 `submit "YourTeam" -isl -osl` 提交所有配置（~1小时/组合）
+2. **批量提交**：多并发 `submit "YourTeam" -isl -osl` 提交所有配置（~2小时/组合）
    - 一次性完成测试和提交，可在夜间运行
 
 💡 **为什么直接用 submit？**

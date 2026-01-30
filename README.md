@@ -71,9 +71,9 @@ Each model is tested with multiple **ISL (Input Sequence Length)** and **OSL (Ou
 
 | ISL | OSL | Description | DeepSeek-R1 CONC | GPT-OSS CONC |
 |-----|-----|-------------|------------------|--------------|
-| 1024 | 1024 | Standard short | 4,8,16,32,64 | 4,8 |
-| 1024 | 8192 | Long generation | 4,8,16,32,64 | 4,8,16 |
-| 8192 | 1024 | Long context | 4,8,16,32,64 | 4,8 |
+| 1024 | 1024 | Standard short | 4,8,32,64,128,256 | 4,8,16,32,64,256 |
+| 1024 | 8192 | Long generation | 4,8,16,32,64,128 | 4,8,16,32,64,256 |
+| 8192 | 1024 | Long context | 4,8,16,32,64,128 | 4,8,16,32,64,256 |
 
 **CONC** = Maximum concurrent requests
 
