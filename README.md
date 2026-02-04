@@ -1,17 +1,15 @@
-# AMD Instinct MI355X InferenceMAX Bounty Program
+# AMD Instinct MI355X Performance Optimization Bounty Program
 
 [中文版](https://github.com/danielhua23/amdgpu_inferencemax_bounty/blob/main/README_ZH.md)
 ## 🎯 Overview
 
-Welcome to the **AMD Instinct MI355X InferenceMAX Bounty Program**! This competition challenges developers to optimize LLM inference performance on AMD's latest Instinct MI355X GPUs, targeting to beat NVIDIA B200 baseline performance on [InferenceMAX](https://inferencemax.semianalysis.com/) benchmarks and contribute your optimizations back to the open-source community.
+Welcome to the **AMD Instinct MI355X Performance Optimization Bounty Program**! This competition challenges developers to optimize LLM inference performance on AMD's latest Instinct MI355X GPUs, targeting to beat NVIDIA B200 baseline performance on [InferenceMAX](https://inferencemax.semianalysis.com/) benchmarks and contribute your optimizations back to the open-source community.
 
 ## 🏆 Competition Rules
 
 ### 1. Performance Benchmark
 
-- **Target**: Your solution must exceed the **best B200 baseline** recorded during the competition period
-- **Baseline Updates**: B200 baselines will be **dynamically updated** throughout the competition to align with [InferenceMAX](https://inferencemax.semianalysis.com/)
-- **Evaluation Period**: Performance is measured against the best B200 results within the competition timeframe
+- **Target**: Your solution must exceed the **baseline** during the competition period on deepseekR1 + sglang and gptoss + vllm
 
 ### 2. Required Submissions
 
@@ -22,9 +20,9 @@ Participants must submit the following to qualify:
 - See benchmark instructions below for automation
 
 #### b) Performance Curve Plot
-- Provide a throughput vs. latency curve similar to [InferenceMAX](https://inferencemax.semianalysis.com/)
+- Provide a throughput per gpu(y axis) vs. e2e latency(x axis) curve
 - Must include all tested concurrency levels for the specific ISL-OSL configuration
-- **Qualification Criteria**: At least **50% of data points** must be above the B200 TRT-LLM baseline to enter the evaluation pool
+- **Qualification Criteria**: for all tested concurrency levels of one ISL-OSL configuration, at least **50% of data points** must be above thebaseline to enter the evaluation pool
 
 #### c) Technical Documentation
 Your submission must include detailed documentation explaining:
@@ -34,7 +32,7 @@ Your submission must include detailed documentation explaining:
 
 ### 3. Winning Criteria
 
-- **Selection Process**: We will select the **first participant** who beats the B200 baseline for each configuration during regular competition time
+- **Selection Process**: We will select the **first participant** who beats the baseline for each configuration during regular competition time
 - **Multiple Winners**: Each model-ISL-OSL configuration has its own bounty (see Bounty Structure below)
 
 ### 4. Prize Claiming Process
@@ -121,7 +119,7 @@ Before submitting, ensure you have:
 - [ ] Run benchmarks using provided scripts
 - [ ] Submitted results to the leaderboard (automated in scripts)
 - [ ] Plotted throughput vs. latency curve with all CONC values
-- [ ] Verified >50% of curve data points beat B200 baseline
+- [ ] Verified >50% of curve data points beat baseline, one data point is one CONC value
 - [ ] Prepared technical documentation explaining:
   - [ ] Why your solution works (technical details)
   - [ ] How to reproduce results (step-by-step)
@@ -172,29 +170,25 @@ amdgpu_inferencemax_bounty/
 
 ## 💡 Tips for Success
 
-1. **Study InferenceMAX**: Review current B200 performance curves on [InferenceMAX](https://inferencemax.semianalysis.com/) to understand the target
-2. **Performance Profiling**: Use ROCm profiling tools to identify bottlenecks
-3. **Kernel Optimization**: Focus on high-impact kernels (attention, GEMM, quantization)
-4. **Memory Management**: Optimize GPU memory usage and data transfers
-5. **Documentation**: Good documentation increases your chances of PR acceptance
-6. **Community**: Engage with vLLM/SGLang communities for best practices
+1. **Performance Profiling**: Use ROCm profiling tools to identify bottlenecks
+2. **Kernel Optimization**: Focus on high-impact kernels (attention, GEMM, quantization)
+3. **Memory Management**: Optimize GPU memory usage and data transfers
+4. **Documentation**: Good documentation increases your chances of PR acceptance
+5. **Community**: Engage with vLLM/SGLang communities for best practices
 
 ## ❓ FAQ
 
 **Q: Can I participate in multiple bounties?**  
 A: Yes! Each Model×ISL×OSL configuration is independent. You can submit solutions for all 6 bounties.
 
-**Q: What if multiple people beat B200 at the same time?**  
-A: We will select the one with more curve data points above B200. If tied, we will select the one with higher sum of throughput ratios.
+**Q: What if multiple people beat baselines at the same time?**  
+A: We will select the one with more curve data points above baseline. If tied, we will select the one with higher sum of throughput ratios in the regular time.
 
 **Q: Can I use proprietary optimizations?**  
 A: No. Your solution must be open-source and mergeable into vLLM/SGLang public repositories.
 
-**Q: What if my PR is rejected?**  
-A: You have 2 weeks to address feedback and get it merged. Work closely with maintainers.
-
-**Q: Do I need to beat B200 on ALL CONC values?**  
-A: No. You need ≥50% of your curve data points above B200 AND all curve data points must not be lower than AMD's existing performance points on InferenceMAX to qualify, then we compare overall performance.
+**Q: Do I need to beat baselines on ALL CONC values?**  
+A: No. But you need ≥50% of your curve data points above baselines AND all curve data points must not be lower than AMD's existing performance points to qualify, then we compare overall performance.
 
 ## 📞 Support & Contact
 
@@ -207,24 +201,8 @@ For questions or issues:
 
 - **Competition Start**: [TBD]
 - **Competition End**: [TBD]
-- **B200 Baseline Updates**: Continuous (aligned with InferenceMAX)
 - **PR Submission Deadline**: 2 weeks after winner selection
 - **Prize Distribution**: After successful PR merge
-
-## 🎖️ Recognition
-
-Winners will be:
-- Listed on the official leaderboards
-- Credited in vLLM/SGLang release notes
-- Featured in AMD and SemiAnalysis communications
-
----
-
-**Good luck, and happy optimizing! 🚀**
-
-*Let's push the boundaries of LLM inference performance together!*
-
----
 
 ## License
 
@@ -232,7 +210,6 @@ This benchmark suite and documentation are provided under [LICENSE TBD].
 
 ## Acknowledgments
 
-- **SemiAnalysis** for the InferenceMAX platform
 - **vLLM Team** for the vLLM inference engine
 - **SGLang Team** for the SGLang inference framework
 - **AMD** for the Instinct MI355X GPUs and ROCm platform
