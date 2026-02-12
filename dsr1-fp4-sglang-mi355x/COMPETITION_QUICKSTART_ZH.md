@@ -27,7 +27,7 @@
 
 ## 目标
 
-在 AMD MI355X GPU 上优化 SGLang 推理dsr1-fp4的性能，并超越B200在该模型上的性能，同时保持模型准确性。
+在 AMD MI355X GPU 上优化 SGLang 推理dsr1-fp4的性能，并超越指定的baseline，同时保持模型准确性。
 
 
 ## 核心文件
@@ -255,8 +255,8 @@ source all_conc_var.sh
 
 **提交内容**：每个 CONC 配置会独立提交，包含：
 - 队伍名称 + CONC 值
-- **MI355X vs B200 直接对比**：E2E、吞吐量、性能比率
-- 准确性指标：bits_per_byte, byte_perplexity, word_perplexity
+- **MI355X vs baseline 直接对比**：E2E、吞吐量、性能比率
+- 准确性指标：gsm8k_invalid, gsm8k_accuracy
 
 
 ## 测试模式对比
@@ -291,24 +291,19 @@ source all_conc_var.sh
 
 - **Throughput per GPU** (`tput_per_gpu`) - 权重最高 🏅
   - 单GPU归一化吞吐量 = `total_token_throughput / 8`
-  - 与 B200 baseline 直接对比
+  - 与 baseline 直接对比
 - **E2E (median)** (ms) - 端到端延迟中位数
-  - 与 B200 baseline 直接对比
+  - 与 baseline 直接对比
 
 ### 准确性要求（必须满足）
 
 所有指标必须在基线 ± 3% 范围内：
-- bits_per_byte ≤ 0.4485 × 1.03 = **0.4620**
-- byte_perplexity ≤ 1.3646 × 1.03 = **1.4055**
-- word_perplexity ≤ 3.2522 × 1.03 = **3.3498**
+- gsm8k_accuracy ≤ 0.955 × 1.03 = **0.927**
+- gsm8k_invalid ≤ **3**
 
 ❌ 超出范围会立即终止测试，不运行性能基准
 
 ### Baseline 对比 📊
-
-**性能比率解读**：
-- `tput_per_gpu_ratio_vs_b200_1126 > 1.0` = MI355X 吞吐量更高 ✅
-- `median_e2e_ratio_vs_b200_1126 < 1.0` = MI355X 延迟更低 ✅
 
 详见结果 JSON 中的 `baseline_nv1126` 字段。
 
@@ -435,15 +430,6 @@ Results saved in: batch_isl1024_osl1024_20251125_150000/
 ```
 
 ## 常见问题
-
-### Q: 准确性验证失败怎么办？
-
-```
-ERROR: Accuracy validation FAILED!
-bits_per_byte: 6.5000 > 5.1500
-```
-
-**解决**：你的优化影响了模型质量，需要调整算法或参数
 
 ### Q: 如何只启动服务器不运行测试？
 

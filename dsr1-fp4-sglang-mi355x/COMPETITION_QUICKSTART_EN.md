@@ -254,7 +254,7 @@ source all_conc_var.sh
 **Submission Content**: Each CONC configuration submits independently, including:
 - Team name + CONC value
 - **MI355X vs baseline Direct Comparison**: E2E, throughput, performance ratios
-- Accuracy metrics: bits_per_byte, byte_perplexity, word_perplexity
+- Accuracy metrics: gsm8k_invalid, gsm8k_accuracy
 
 
 ## Test Mode Comparison
@@ -296,9 +296,8 @@ source all_conc_var.sh
 ### Accuracy Requirements (Must Meet)
 
 All metrics must be within baseline ± 3% range:
-- bits_per_byte ≤ 0.4485 × 1.03 = **0.4620**
-- byte_perplexity ≤ 1.3646 × 1.03 = **1.4055**
-- word_perplexity ≤ 3.2522 × 1.03 = **3.3498**
+- gsm8k_accuracy ≤ 0.955 × 1.03 = **0.927**
+- gsm8k_invalid ≤ **3**
 
 ❌ Exceeding range will immediately terminate testing, performance benchmark will not run
 
@@ -434,13 +433,6 @@ Results saved in: batch_isl1024_osl1024_20251125_150000/
 ```
 
 ## FAQ
-
-### Q: What if accuracy validation fails?
-
-```
-ERROR: Accuracy validation FAILED!
-bits_per_byte: 6.5000 > 5.1500
-```
 
 **Solution**: Your optimization affected model quality, need to adjust algorithm or parameters
 
