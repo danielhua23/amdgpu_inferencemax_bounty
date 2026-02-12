@@ -16,7 +16,7 @@
 - [Evaluation Criteria](#evaluation-criteria)
   - [Performance Metrics (Primary)](#performance-metrics-primary)
   - [Accuracy Requirements (Must Meet)](#accuracy-requirements-must-meet)
-  - [B200 Baseline Comparison 📊](#b200-baseline-comparison-)
+  - [Baseline Comparison 📊](#baseline-comparison-)
 - [Optimization Directions](#optimization-directions)
 - [Development Tips](#development-tips)
 - [FAQ](#faq)
@@ -29,9 +29,6 @@
 
 Optimize inference performance of dsr1-fp4 model using sglang on AMD MI355X GPUs, **surpass baseline on this model**, while maintaining model accuracy.
 
-## 📌 Important Notice
-
-This competition's benchmark **aligns with the [InferenceMAX](https://github.com/InferenceMAX/InferenceMAX)** repository's AMD MI355X test configuration and will be synchronized with InferenceMAX updates.
 
 ## Core Files
 
@@ -256,7 +253,7 @@ source all_conc_var.sh
 
 **Submission Content**: Each CONC configuration submits independently, including:
 - Team name + CONC value
-- **MI355X vs B200 Direct Comparison**: E2E, throughput, performance ratios
+- **MI355X vs baseline Direct Comparison**: E2E, throughput, performance ratios
 - Accuracy metrics: bits_per_byte, byte_perplexity, word_perplexity
 
 
@@ -292,9 +289,9 @@ source all_conc_var.sh
 
 - **Throughput per GPU** (`tput_per_gpu`) - Highest weight 🏅
   - Single GPU normalized throughput = `total_token_throughput / 8`
-  - Direct comparison with B200 baseline
+  - Direct comparison with baseline
 - **E2E (median)** (ms) - End-to-end latency median
-  - Direct comparison with B200 baseline
+  - Direct comparison with baseline
 
 ### Accuracy Requirements (Must Meet)
 
@@ -305,15 +302,15 @@ All metrics must be within baseline ± 3% range:
 
 ❌ Exceeding range will immediately terminate testing, performance benchmark will not run
 
-### B200 Baseline Comparison 📊
+### Baseline Comparison 📊
 
-**Auto-comparison feature**: Each result JSON automatically includes NVIDIA B200 (periodically synced with InferenceMAX B200 performance data) baseline data and performance ratios!
+**Auto-comparison feature**: Each result JSON automatically includes baseline data and performance ratios!
 
 **Performance Ratio Interpretation**:
-- `tput_per_gpu_ratio_vs_b200_1126 > 1.0` = MI355X has higher throughput ✅
-- `median_e2e_ratio_vs_b200_1126 < 1.0` = MI355X has lower latency ✅
+- `tput_per_gpu_ratio_vs_1126 > 1.0` = MI355X has higher throughput ✅
+- `median_e2e_ratio_vs_1126 < 1.0` = MI355X has lower latency ✅
 
-See `b200_baseline_nv1126` field in result JSON for details.
+See `baseline_nv1126` field in result JSON for details.
 
 ## Optimization Directions
 
@@ -578,7 +575,6 @@ Round 5: Batch Submission
 
 ## Resource Links
 
-- 📖 [InferenceMAX Official Repository](https://github.com/InferenceMAX/InferenceMAX) - Benchmark reference
 - 🔧 [SGLang GitHub](https://github.com/sgl-project/sglang) - Inference framework
 - 📊 Leaderboards:
   - [ISL=1024, OSL=1024](https://daniehua-dsr1-fp4-sgl-isl1024osl1024.hf.space)
