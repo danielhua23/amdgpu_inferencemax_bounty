@@ -16,7 +16,7 @@
 - [评分标准](#评分标准)
   - [性能指标（主要）](#性能指标主要)
   - [准确性要求（必须满足）](#准确性要求必须满足)
-  - [B200 Baseline 对比 📊](#b200-baseline-对比-)
+  - [Baseline 对比 📊](#baseline-对比-)
 - [优化方向建议](#优化方向建议)
 - [开发技巧](#开发技巧)
 - [常见问题](#常见问题)
@@ -29,18 +29,15 @@
 
 在 AMD MI355X GPU 上优化 SGLang 推理dsr1-fp4的性能，并超越B200在该模型上的性能，同时保持模型准确性。
 
-## 📌 重要说明
-
-本竞赛的测试基准**对齐 [InferenceMAX](https://github.com/InferenceMAX/InferenceMAX)** 仓库的 AMD MI355X 测试配置，并会随着 InferenceMAX 的更新而同步更新。
 
 ## 核心文件
 
 | 文件 | 用途 |
 |------|------|
-| `amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x/launch_sglang_server.sh` | 启动 SGLang 服务器 |
-| `amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x/dsr1_benchmark` | 运行测试并提交结果（二进制文件）|
-| `amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x/all_conc_var.sh` | 多并发测试环境变量配置 |
-| `amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x/specific_conc_var.sh` | 单配置测试环境变量配置 |
+| `amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x/launch_sglang_server.sh` | 启动 SGLang 服务器 |
+| `amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x/dsr1_benchmark` | 运行测试并提交结果（二进制文件）|
+| `amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x/all_conc_var.sh` | 多并发测试环境变量配置 |
+| `amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x/specific_conc_var.sh` | 单配置测试环境变量配置 |
 
 ## 快速开始（5 步走）
 
@@ -58,7 +55,7 @@ git clone https://github.com/sgl-project/sglang.git
 git clone --recursive https://github.com/ROCm/aiter.git
 
 # 克隆脚本文件所在仓库
-git clone https://github.com/danielhua23/amdgpu_inferencemax_bounty.git
+git clone https://github.com/danielhua23/amdgpu_bounty_optimization.git
 ```
 
 ### 2️⃣ 启动开发容器
@@ -77,14 +74,14 @@ docker run -it \
   -v ~/competition/aiter:/workspace/aiter \
   -v ~/competition/sglang:/workspace/sglang \
   -e HF_TOKEN=your_huggingface_token_here \
-  rocm/7.0:rocm7.0_ubuntu_22.04_sgl-dev-v0.5.2-rocm7.0-mi35x-20250915 \
+  lmsysorg/sglang:v0.5.8-rocm700-mi35x \
   /bin/bash
 ```
 
 **挂载说明**：
 - 宿主机的 `~/competition/*` → 容器内 `/workspace/*`
 - 在宿主机修改代码，容器内立即生效（反之亦然）
-- 测试脚本位于 `/workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x/` 目录
+- 测试脚本位于 `/workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x/` 目录
 
 ### 3️⃣ 在容器内安装最新版本的可编辑 SGLang
 
@@ -92,9 +89,9 @@ docker run -it \
 
 ```bash
 # 卸载容器内部已有的sglang相关库
-pip uninstall aiter
-pip uninstall sglang
-pip uninstall sgl-kernel
+pip uninstall -y amd-aiter
+pip uninstall -y sglang
+pip uninstall -y sgl-kernel
 # 进入aiter目录
 cd /workspace/aiter
 python3 setup.py develop
@@ -102,7 +99,7 @@ python3 setup.py develop
 verify if newest aiter is installed
 ```bash
 root@mi355:/workspace# pip list | grep aiter
-aiter                             0.1.7.post3.dev39+g1f5b378dc        /workspace/aiter
+amd-aiter                             0.1.10.post4.dev9+g1a9f7eaf0        /workspace/aiter
 ```
 lets continue install sgl-kernel
 ```bash
@@ -176,7 +173,7 @@ python setup_rocm.py install
 **适用场景**：开发阶段快速验证单个配置的性能
 
 ```bash
-cd /workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x
+cd /workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x
 
 # 1. 加载环境变量（无需手动 export）
 source specific_conc_var.sh
@@ -204,7 +201,7 @@ source specific_conc_var.sh
 - `ISL`, `OSL`, `CONC`（测试配置）
 - `RANDOM_RANGE_RATIO`, `NUM_PROMPTS`, `RESULT_FILENAME`（测试参数）
 
-**提示**：所有 `.sh` 脚本都位于 `/workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x/` 目录
+**提示**：所有 `.sh` 脚本都位于 `/workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x/` 目录
 
 ---
 
@@ -215,7 +212,7 @@ source specific_conc_var.sh
 **只需 3 条命令，自动测试所有 18 个配置并提交！⭐**
 
 ```bash
-cd /workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x
+cd /workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x
 
 # 1. 加载环境变量（无需手动 export）
 source all_conc_var.sh
@@ -307,15 +304,13 @@ source all_conc_var.sh
 
 ❌ 超出范围会立即终止测试，不运行性能基准
 
-### B200 Baseline 对比 📊
-
-**自动对比功能**：每个结果 JSON 自动包含 NVIDIA B200 (会随着inferenceMax上记录的B200性能数据周期性同步更新) 的 baseline 数据和性能比率！
+### Baseline 对比 📊
 
 **性能比率解读**：
 - `tput_per_gpu_ratio_vs_b200_1126 > 1.0` = MI355X 吞吐量更高 ✅
 - `median_e2e_ratio_vs_b200_1126 < 1.0` = MI355X 延迟更低 ✅
 
-详见结果 JSON 中的 `b200_baseline_nv1126` 字段。
+详见结果 JSON 中的 `baseline_nv1126` 字段。
 
 ## 优化方向建议
 
@@ -355,7 +350,7 @@ tail -f /tmp/sglang-server-*.log | grep -i error
 
 ```bash
 # 1. 加载环境变量
-cd /workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x
+cd /workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x
 source all_conc_var.sh
 
 # 2. 启动 SGLang 服务器
@@ -453,7 +448,7 @@ bits_per_byte: 6.5000 > 5.1500
 ### Q: 如何只启动服务器不运行测试？
 
 ```bash
-cd /workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x
+cd /workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x
 
 # 加载环境变量
 source all_conc_var.sh
@@ -493,7 +488,7 @@ tail -f /tmp/sglang-server-*.log
 使用单配置模式：
 
 ```bash
-cd /workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x
+cd /workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x
 
 # 1. 编辑 specific_conc_var.sh，修改 CONC 值
 vim specific_conc_var.sh  # 修改 CONC=64
@@ -507,7 +502,7 @@ source specific_conc_var.sh
 
 或者直接手动设置：
 ```bash
-cd /workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x
+cd /workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x
 source specific_conc_var.sh
 export CONC=64  # 覆盖默认值，只测试 CONC=64
 export NUM_PROMPTS=3200
@@ -581,7 +576,6 @@ export NUM_PROMPTS=3200
 
 ## 资源链接
 
-- 📖 [InferenceMAX 官方仓库](https://github.com/InferenceMAX/InferenceMAX) - 测试基准参考
 - 🔧 [SGLang GitHub](https://github.com/sgl-project/sglang) - 推理框架
 - 📊 Leaderboards:
   - [ISL=1024, OSL=1024](https://daniehua-dsr1-fp4-sgl-isl1024osl1024.hf.space)

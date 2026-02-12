@@ -27,7 +27,7 @@
 
 ## Objective
 
-Optimize inference performance of dsr1-fp4 model using sglang on AMD MI355X GPUs while maintaining model accuracy.
+Optimize inference performance of dsr1-fp4 model using sglang on AMD MI355X GPUs, **surpass baseline on this model**, while maintaining model accuracy.
 
 ## 📌 Important Notice
 
@@ -37,10 +37,10 @@ This competition's benchmark **aligns with the [InferenceMAX](https://github.com
 
 | File | Purpose |
 |------|------|
-| `amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x/launch_sglang_server.sh` | Launch SGLang server |
-| `amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x/dsr1_benchmark` | Run tests and submit results (binary file)|
-| `amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x/all_conc_var.sh` | Multi-concurrency test environment variables |
-| `amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x/specific_conc_var.sh` | Single configuration test environment variables |
+| `amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x/launch_sglang_server.sh` | Launch SGLang server |
+| `amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x/dsr1_benchmark` | Run tests and submit results (binary file)|
+| `amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x/all_conc_var.sh` | Multi-concurrency test environment variables |
+| `amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x/specific_conc_var.sh` | Single configuration test environment variables |
 
 ## Quick Start (5 Steps)
 
@@ -58,7 +58,7 @@ git clone https://github.com/sgl-project/sglang.git
 git clone --recursive https://github.com/ROCm/aiter.git
 
 # Clone scripts repository
-git clone https://github.com/danielhua23/amdgpu_inferencemax_bounty.git
+git clone https://github.com/danielhua23/amdgpu_bounty_optimization.git
 ```
 
 ### 2️⃣ Launch Development Container
@@ -77,14 +77,14 @@ docker run -it \
   -v ~/competition/aiter:/workspace/aiter \
   -v ~/competition/sglang:/workspace/sglang \
   -e HF_TOKEN=your_huggingface_token_here \
-  rocm/7.0:rocm7.0_ubuntu_22.04_sgl-dev-v0.5.2-rocm7.0-mi35x-20250915 \
+  lmsysorg/sglang:v0.5.8-rocm700-mi35x \
   /bin/bash
 ```
 
 **Mount Instructions**:
 - Host `~/competition/*` → Container `/workspace/*`
 - Code modifications on host machine take effect immediately in container (and vice versa)
-- Test scripts are located in `/workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x/` directory
+- Test scripts are located in `/workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x/` directory
 
 ### 3️⃣ Install Editable SGLang in Container
 
@@ -92,9 +92,9 @@ docker run -it \
 
 ```bash
 # Uninstall existing sglang-related libraries in container
-pip uninstall aiter
-pip uninstall sglang
-pip uninstall sgl-kernel
+pip uninstall -y amd-aiter
+pip uninstall -y sglang
+pip uninstall -y sgl-kernel
 # Enter aiter directory
 cd /workspace/aiter
 python3 setup.py develop
@@ -102,7 +102,7 @@ python3 setup.py develop
 verify if newest aiter is installed
 ```bash
 root@mi355:/workspace# pip list | grep aiter
-aiter                             0.1.7.post3.dev39+g1f5b378dc        /workspace/aiter
+amd-aiter                             0.1.10.post4.dev9+g1a9f7eaf0        /workspace/aiter
 ```
 lets continue install sgl-kernel
 ```bash
@@ -176,7 +176,7 @@ Done! View Leaderboard rankings in real-time 🎉
 **Use Case**: Quickly validate single CONC config performance during development
 
 ```bash
-cd /workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x
+cd /workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x
 
 # 1. Load environment variables (no manual export needed)
 source specific_conc_var.sh
@@ -203,7 +203,7 @@ source specific_conc_var.sh
 - `ISL`, `OSL`, `CONC` (test configuration)
 - `RANDOM_RANGE_RATIO`, `NUM_PROMPTS`, `RESULT_FILENAME` (test parameters)
 
-**Tip**: All `.sh` scripts are located in `/workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x/` directory
+**Tip**: All `.sh` scripts are located in `/workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x/` directory
 
 ---
 
@@ -214,7 +214,7 @@ source specific_conc_var.sh
 **Only 3 commands to auto-test all 18 configurations and submit! ⭐**
 
 ```bash
-cd /workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x
+cd /workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x
 
 # 1. Load environment variables (no manual export needed)
 source all_conc_var.sh
@@ -353,7 +353,7 @@ tail -f /tmp/sglang-server-*.log | grep -i error
 
 ```bash
 # 1. Load environment variables
-cd /workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x
+cd /workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x
 source all_conc_var.sh
 
 # 2. Launch SGLang server
@@ -450,7 +450,7 @@ bits_per_byte: 6.5000 > 5.1500
 ### Q: How to launch server only without running tests?
 
 ```bash
-cd /workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x
+cd /workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x
 
 # Load environment variables
 source all_conc_var.sh
@@ -490,7 +490,7 @@ tail -f /tmp/sglang-server-*.log
 Use single configuration mode:
 
 ```bash
-cd /workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x
+cd /workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x
 
 # 1. Edit specific_conc_var.sh to modify CONC value
 vim specific_conc_var.sh  # Modify CONC=64
@@ -504,7 +504,7 @@ source specific_conc_var.sh
 
 Or set manually:
 ```bash
-cd /workspace/amdgpu_inferencemax_bounty/dsr1-fp4-sglang-mi355x
+cd /workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x
 source specific_conc_var.sh
 export CONC=64  # Override default, test CONC=64 only
 export NUM_PROMPTS=3200
