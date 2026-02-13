@@ -142,6 +142,7 @@ install gpt_oss to measure model accuracy
 git clone https://github.com/danielhua23/gpt-oss.git
 cd gpt-oss
 pip install -e .
+pip install blobfile
 ```
 ### 4️⃣ Example: How to Recompile After Code Modifications
 

@@ -142,6 +142,7 @@ python -c "import vllm; print(vllm.__file__)"
 git clone https://github.com/danielhua23/gpt-oss.git
 cd gpt-oss
 pip install -e .
+pip install blobfile
 ```
 
 ### 4️⃣ 示例: 修改代码后如何recompile
