@@ -3,7 +3,6 @@
 ## 📑 Table of Contents
 
 - [Objective](#objective)
-- [📌 Important Notice](#-important-notice)
 - [Core Files](#core-files)
 - [Quick Start (5 Steps)](#quick-start-5-steps)
   - [1️⃣ Prepare Working Directory (on Host Machine)](#1️⃣-prepare-working-directory-on-host-machine)
@@ -16,7 +15,7 @@
 - [Evaluation Criteria](#evaluation-criteria)
   - [Performance Metrics (Primary)](#performance-metrics-primary)
   - [Accuracy Requirements (Must Meet)](#accuracy-requirements-must-meet)
-  - [B200 Baseline Comparison 📊](#b200-baseline-comparison-)
+  - [Baseline Comparison 📊](#baseline-comparison-)
 - [Optimization Directions](#optimization-directions)
 - [Development Tips](#development-tips)
 - [FAQ](#faq)
@@ -29,11 +28,7 @@
 
 Optimize vLLM inference performance for GPT-OSS 120B FP4 model on AMD MI355X GPUs while maintaining model accuracy.
 
-## 📌 Important Notice
-
-This competition's benchmark **aligns with the [InferenceMAX](https://github.com/InferenceMAX/InferenceMAX)** repository's AMD MI355X test configuration and will be synchronized with InferenceMAX updates.
-
-**Model Specifics**:
+## Model Specifics
 - **Model**: `openai/gpt-oss-120b` (FP4 quantized)
 - **Framework**: vLLM
 - **Features**: Uses AMD AITER optimized MoE and attention kernels
@@ -42,10 +37,10 @@ This competition's benchmark **aligns with the [InferenceMAX](https://github.com
 
 | File | Purpose |
 |------|------|
-| `amdgpu_inferencemax_bounty/gptoss-fp4-vllm-mi355x/launch_vllm_server.sh` | Launch vLLM server |
-| `amdgpu_inferencemax_bounty/gptoss-fp4-vllm-mi355x/gptoss_benchmark` | Run tests and submit results (binary file)|
-| `amdgpu_inferencemax_bounty/gptoss-fp4-vllm-mi355x/all_conc_var.sh` | Multi-concurrency test environment variables |
-| `amdgpu_inferencemax_bounty/gptoss-fp4-vllm-mi355x/specific_conc_var.sh` | Single configuration test environment variables |
+| `amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x/launch_vllm_server.sh` | Launch vLLM server |
+| `amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x/gptoss_benchmark` | Run tests and submit results (binary file)|
+| `amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x/all_conc_var.sh` | Multi-concurrency test environment variables |
+| `amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x/specific_conc_var.sh` | Single configuration test environment variables |
 
 ## Quick Start (5 Steps)
 
@@ -63,7 +58,7 @@ git clone https://github.com/vllm-project/vllm.git
 git clone --recursive https://github.com/ROCm/aiter.git
 
 # Clone scripts repository
-git clone https://github.com/danielhua23/amdgpu_inferencemax_bounty.git
+git clone https://github.com/danielhua23/amdgpu_bounty_optimization.git
 ```
 
 ### 2️⃣ Launch Development Container
@@ -89,7 +84,7 @@ docker run -it \
 **Mount Instructions**:
 - Host `~/competition/*` → Container `/workspace/*`
 - Code modifications on host machine take effect immediately in container (and vice versa)
-- Test scripts are located in `/workspace/amdgpu_inferencemax_bounty/gptoss-fp4-vllm-mi355x/` directory
+- Test scripts are located in `/workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x/` directory
 
 ### 3️⃣ Install Latest Editable vLLM in Container
 
@@ -193,7 +188,7 @@ Done! View Leaderboard rankings in real-time 🎉
 **Use Case**: Quickly validate single configuration performance during development
 
 ```bash
-cd /workspace/amdgpu_inferencemax_bounty/gptoss-fp4-vllm-mi355x
+cd /workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x
 
 # 1. Load environment variables (no manual export needed)
 source specific_conc_var.sh
@@ -221,7 +216,7 @@ source specific_conc_var.sh
 - `ISL`, `OSL`, `CONC` (test configuration)
 - `MAX_MODEL_LEN`, `RANDOM_RANGE_RATIO`, `NUM_PROMPTS`, `RESULT_FILENAME` (test parameters)
 
-**Tip**: All `.sh` scripts are located in `/workspace/amdgpu_inferencemax_bounty/gptoss-fp4-vllm-mi355x/` directory
+**Tip**: All `.sh` scripts are located in `/workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x/` directory
 
 ---
 
@@ -232,7 +227,7 @@ source specific_conc_var.sh
 **Only 3 commands to auto-test all configurations and submit! ⭐**
 
 ```bash
-cd /workspace/amdgpu_inferencemax_bounty/gptoss-fp4-vllm-mi355x
+cd /workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x
 
 # 1. Load environment variables (no manual export needed)
 source all_conc_var.sh
@@ -275,7 +270,7 @@ source all_conc_var.sh
 
 **Submission Content**: Each CONC configuration submits independently, including:
 - Team name + CONC value
-- **MI355X vs B200 Direct Comparison**: E2E, throughput, performance ratios
+- **MI355X vs baseline Direct Comparison**: E2E, throughput, performance ratios
 - Accuracy metrics: bits_per_byte, byte_perplexity, word_perplexity
 
 **CONC Range Explanation**:
@@ -313,9 +308,9 @@ source all_conc_var.sh
 
 - **Throughput per GPU** (`tput_per_gpu`) - Highest weight 🏅
   - Single GPU normalized throughput = `total_token_throughput / 8`
-  - Direct comparison with B200 baseline
+  - Direct comparison with baseline
 - **E2E (median)** (ms) - End-to-end latency median
-  - Direct comparison with B200 baseline
+  - Direct comparison with baseline
 
 ### Accuracy Requirements (Must Meet)
 
@@ -326,15 +321,15 @@ All metrics must be within baseline ± 3% range:
 
 ❌ Exceeding range will immediately terminate testing, performance benchmark will not run
 
-### B200 Baseline Comparison 📊
+### Baseline Comparison 📊
 
-**Auto-comparison feature**: Each result JSON automatically includes NVIDIA B200 (periodically synced with InferenceMAX B200 performance data) baseline data and performance ratios!
+**Auto-comparison feature**: Each result JSON automatically includes baseline data and performance ratios!
 
 **Performance Ratio Interpretation**:
-- `tput_per_gpu_ratio_vs_b200_1126 > 1.0` = MI355X has higher throughput ✅
-- `median_e2e_ratio_vs_b200_1126 < 1.0` = MI355X has lower latency ✅
+- `tput_per_gpu_ratio_vs_baseline_1126 > 1.0` = MI355X has higher throughput ✅
+- `median_e2e_ratio_vs_baseline_1126 < 1.0` = MI355X has lower latency ✅
 
-See `b200_baseline_nv1126` field in result JSON for details.
+See `baseline_nv1126` field in result JSON for details.
 
 ## Optimization Directions
 
@@ -379,7 +374,7 @@ tail -f /tmp/vllm-server-*.log | grep -i error
 
 ```bash
 # 1. Load environment variables
-cd /workspace/amdgpu_inferencemax_bounty/gptoss-fp4-vllm-mi355x
+cd /workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x
 source all_conc_var.sh
 
 # 2. Launch vLLM server
@@ -476,7 +471,7 @@ bits_per_byte: 6.5000 > 5.1500
 ### Q: How to launch server only without running tests?
 
 ```bash
-cd /workspace/amdgpu_inferencemax_bounty/gptoss-fp4-vllm-mi355x
+cd /workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x
 
 # Load environment variables
 source all_conc_var.sh
@@ -516,7 +511,7 @@ tail -f /tmp/vllm-server-*.log
 Use single configuration mode:
 
 ```bash
-cd /workspace/amdgpu_inferencemax_bounty/gptoss-fp4-vllm-mi355x
+cd /workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x
 
 # 1. Edit specific_conc_var.sh to modify CONC value
 vim specific_conc_var.sh  # Modify CONC=16
@@ -530,7 +525,7 @@ source specific_conc_var.sh
 
 Or set manually:
 ```bash
-cd /workspace/amdgpu_inferencemax_bounty/gptoss-fp4-vllm-mi355x
+cd /workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x
 source specific_conc_var.sh
 export CONC=16  # Override default, test CONC=16 only
 export NUM_PROMPTS=160  # GPT-OSS: CONC * 10
@@ -619,7 +614,6 @@ Round 5: Batch Submission
 
 ## Resource Links
 
-- 📖 [InferenceMAX Official Repository](https://github.com/InferenceMAX/InferenceMAX) - Benchmark reference
 - 🔧 [vLLM GitHub](https://github.com/vllm-project/vllm) - Inference framework
 - 🔧 [AITER GitHub](https://github.com/ROCm/aiter) - AMD GPU operator library
 - 📊 Leaderboards:
