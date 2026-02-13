@@ -137,7 +137,12 @@ python -c "import vllm; print(vllm.__file__)"
 
 >note: you might meet some **error** like : ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts. transformers 4.56.2 requires huggingface-hub<1.0,>=0.34.0, but you have huggingface-hub 1.1.7 which is incompatible..**Just ignore it**
 
-
+install gpt_oss to measure model accuracy
+```
+git clone https://github.com/danielhua23/gpt-oss.git
+cd gpt-oss
+pip install -e .
+```
 ### 4️⃣ Example: How to Recompile After Code Modifications
 
 ```bash
