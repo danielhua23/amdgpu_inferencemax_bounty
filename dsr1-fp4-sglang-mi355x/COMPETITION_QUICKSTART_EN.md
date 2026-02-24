@@ -254,7 +254,7 @@ source all_conc_var.sh
 **Submission Content**: Each CONC configuration submits independently, including:
 - Team name + CONC value
 - **MI355X vs baseline Direct Comparison**: E2E, throughput, performance ratios
-- Accuracy metrics: gsm8k_invalid, gsm8k_accuracy
+- Accuracy metrics: gsm8k_metric
 
 
 ## Test Mode Comparison
@@ -296,8 +296,7 @@ source all_conc_var.sh
 ### Accuracy Requirements (Must Meet)
 
 All metrics must be within baseline ± 3% range:
-- gsm8k_accuracy ≤ 0.955 × 1.03 = **0.927**
-- gsm8k_invalid ≤ **3**
+- gsm8k_metric >= 0.93
 
 ❌ Exceeding range will immediately terminate testing, performance benchmark will not run
 
