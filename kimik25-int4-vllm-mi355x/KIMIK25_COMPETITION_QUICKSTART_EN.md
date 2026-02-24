@@ -1,4 +1,4 @@
-# 🏆 GPT-OSS Competition Quick Start Guide
+# 🏆 KIMIK25 Competition Quick Start Guide
 
 ## 📑 Table of Contents
 
@@ -26,10 +26,10 @@
 
 ## Objective
 
-Optimize vLLM inference performance for GPT-OSS 120B FP4 model on AMD MI355X GPUs while maintaining model accuracy.
+Optimize vLLM inference performance for KIMIK2.5-1T INT4 model on AMD MI355X GPUs while maintaining model accuracy.
 
 ## Model Specifics
-- **Model**: `openai/gpt-oss-120b` (FP4 quantized)
+- **Model**: `moonshotai/Kimi-K2.5` (int4 quantized)
 - **Framework**: Not limited to one framework; vLLM, SGLang, etc. are all acceptable
 - **Features**: Uses AMD AITER optimized MoE and attention kernels
 
@@ -37,10 +37,10 @@ Optimize vLLM inference performance for GPT-OSS 120B FP4 model on AMD MI355X GPU
 
 | File | Purpose |
 |------|------|
-| `amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x/launch_vllm_server.sh` | Launch vLLM server |
-| `amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x/gptoss_benchmark` | Run tests and submit results (binary file)|
-| `amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x/all_conc_var.sh` | Multi-concurrency test environment variables |
-| `amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x/specific_conc_var.sh` | Single configuration test environment variables |
+| `amdgpu_bounty_optimization/kimik25-int4-vllm-mi355x/launch_vllm_server.sh` | Launch vLLM server |
+| `amdgpu_bounty_optimization/kimik25-int4-vllm-mi355x/kimi_benchmark` | Run tests and submit results (binary file)|
+| `amdgpu_bounty_optimization/kimik25-int4-vllm-mi355x/all_conc_var.sh` | Multi-concurrency test environment variables |
+| `amdgpu_bounty_optimization/kimik25-int4-vllm-mi355x/specific_conc_var.sh` | Single configuration test environment variables |
 
 ## Quick Start (5 Steps)
 
@@ -77,14 +77,14 @@ docker run -it \
   -v ~/competition/aiter:/workspace/aiter \
   -v ~/competition/vllm:/workspace/vllm \
   -e HF_TOKEN=your_huggingface_token_here \
-  rocm/7.0:rocm7.0_ubuntu_22.04_vllm_0.10.1_instinct_20250927_rc1 \
+  vllm/vllm-openai-rocm:v0.15.1 \
   /bin/bash
 ```
 
 **Mount Instructions**:
 - Host `~/competition/*` → Container `/workspace/*`
 - Code modifications on host machine take effect immediately in container (and vice versa)
-- Test scripts are located in `/workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x/` directory
+- Test scripts are located in `/workspace/amdgpu_bounty_optimization/kimik25-int4-vllm-mi355x/` directory
 
 ### 3️⃣ Install Latest Editable vLLM in Container
 
@@ -180,7 +180,7 @@ Done! View Leaderboard rankings in real-time 🎉
 **Use Case**: Quickly validate single configuration performance during development
 
 ```bash
-cd /workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x
+cd /workspace/amdgpu_bounty_optimization/kimik25-int4-vllm-mi355x
 
 # 1. Load environment variables (no manual export needed)
 source specific_conc_var.sh
@@ -194,13 +194,13 @@ docker exec -ti vllm-dev bash
 source specific_conc_var.sh
 
 # 4. Recommended: Test and submit directly (~15-20 mins) ⭐
-./gptoss_benchmark submit "YourTeam"
+./kimi_benchmark submit "YourTeam"
 
 # Optional: Quick accuracy validation only (~5-10 mins)
-./gptoss_benchmark acc
+./kimi_benchmark acc
 
 # Optional: Test performance without submitting (~15-20 mins)
-./gptoss_benchmark perf
+./kimi_benchmark perf
 ```
 
 **Environment Variables**: `specific_conc_var.sh` sets:
@@ -208,7 +208,7 @@ source specific_conc_var.sh
 - `ISL`, `OSL`, `CONC` (test configuration)
 - `MAX_MODEL_LEN`, `RANDOM_RANGE_RATIO`, `NUM_PROMPTS`, `RESULT_FILENAME` (test parameters)
 
-**Tip**: All `.sh` scripts are located in `/workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x/` directory
+**Tip**: All `.sh` scripts are located in `/workspace/amdgpu_bounty_optimization/kimik25-int4-vllm-mi355x/` directory
 
 ---
 
@@ -219,7 +219,7 @@ source specific_conc_var.sh
 **Only 3 commands to auto-test all configurations and submit! ⭐**
 
 ```bash
-cd /workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x
+cd /workspace/amdgpu_bounty_optimization/kimik25-int4-vllm-mi355x
 
 # 1. Load environment variables (no manual export needed)
 source all_conc_var.sh
@@ -235,30 +235,30 @@ source all_conc_var.sh
 
 # 4.
 # Submit all results for ISL=1024, OSL=1024 (auto-run CONC=4,8,16,32,64,256, ~2 hours)
-./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 1024
+./kimi_benchmark submit "YourTeam" -isl 1024 -osl 1024
 
 # Submit all results for ISL=1024, OSL=8192 (auto-run CONC=4,8,16,32,64,256, ~2 hours)
-./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 8192
+./kimi_benchmark submit "YourTeam" -isl 1024 -osl 8192
 
 # Submit all results for ISL=8192, OSL=1024 (auto-run CONC=4,8,16,32,64,256, ~2 hours)
-./gptoss_benchmark submit "YourTeam" -isl 8192 -osl 1024
+./kimi_benchmark submit "YourTeam" -isl 8192 -osl 1024
 
 # ========== Optional: Test without submitting, use perf mode ========== 
 
 # Test ISL=1024, OSL=1024 (no submit, ~2 hours)
-./gptoss_benchmark perf -isl 1024 -osl 1024
+./kimi_benchmark perf -isl 1024 -osl 1024
 
 # Test ISL=1024, OSL=8192 (no submit, ~2 hours)
-./gptoss_benchmark perf -isl 1024 -osl 8192
+./kimi_benchmark perf -isl 1024 -osl 8192
 
 # Test ISL=8192, OSL=1024 (no submit, ~2 hours)
-./gptoss_benchmark perf -isl 8192 -osl 1024
+./kimi_benchmark perf -isl 8192 -osl 1024
 ```
 
 **Results auto-submit to corresponding Leaderboards**:
-- ISL=1024, OSL=1024 → https://daniehua-gptoss-fp4-vllm-isl1024osl1024.hf.space
-- ISL=1024, OSL=8192 → https://daniehua-gptoss-fp4-vllm-isl1024osl8192.hf.space
-- ISL=8192, OSL=1024 → https://daniehua-gptoss-fp4-vllm-isl8192osl1024.hf.space
+- ISL=1024, OSL=1024 → https://daniehua-kimik25-int4-vllm-isl1024osl1024.hf.space
+- ISL=1024, OSL=8192 → https://daniehua-kimik25-int4-vllm-isl1024osl8192.hf.space
+- ISL=8192, OSL=1024 → https://daniehua-kimik25-int4-vllm-isl8192osl1024.hf.space
 
 **Submission Content**: Each CONC configuration submits independently, including:
 - Team name + CONC value
@@ -272,18 +272,18 @@ source all_conc_var.sh
 
 | Mode | Command Example | What Runs | Time (Single Config)| Use Case |
 |------|---------|---------|-------------|---------|
-| **submit** ⭐ | `./gptoss_benchmark submit "Team"` | Accuracy + Performance + Submit | ~15-20 mins | **Recommended: All-in-one, view ranking real-time** |
-| **submit -isl -osl** ⭐ | `./gptoss_benchmark submit "Team" -isl 1024 -osl 1024` | Auto-test 6 CONC + Submit | ~2 hours | **Recommended: Batch test and submit** |
-| **acc** | `./gptoss_benchmark acc` | Accuracy test only | ~5-10 mins | Optional: Quick accuracy validation |
-| **perf** | `./gptoss_benchmark perf` | Accuracy + Performance (no submit) | ~15-20 mins | Optional: Test performance without submitting |
-| **perf -isl -osl** | `./gptoss_benchmark perf -isl 1024 -osl 1024` | Auto-test 6 CONC (no submit) | ~2 hours | Optional: Batch test without submitting |
+| **submit** ⭐ | `./kimi_benchmark submit "Team"` | Accuracy + Performance + Submit | ~15-20 mins | **Recommended: All-in-one, view ranking real-time** |
+| **submit -isl -osl** ⭐ | `./kimi_benchmark submit "Team" -isl 1024 -osl 1024` | Auto-test 6 CONC + Submit | ~2 hours | **Recommended: Batch test and submit** |
+| **acc** | `./kimi_benchmark acc` | Accuracy test only | ~5-10 mins | Optional: Quick accuracy validation |
+| **perf** | `./kimi_benchmark perf` | Accuracy + Performance (no submit) | ~15-20 mins | Optional: Test performance without submitting |
+| **perf -isl -osl** | `./kimi_benchmark perf -isl 1024 -osl 1024` | Auto-test 6 CONC (no submit) | ~2 hours | Optional: Batch test without submitting |
 
 ## Two Testing Approaches Comparison
 
 | Approach | Recommended Command | Configs | Time Estimate | Recommended Scenario |
 |------|---------|-------|---------|---------|
-| **Approach 1: Single Config** ⭐ | `./gptoss_benchmark submit "Team"` | 1 | ~15-20 mins | **Development phase rapid iteration** |
-| **Approach 2: Multi-Concurrency** ⭐ | `./gptoss_benchmark submit "Team" -isl 1024 -osl 1024` | 6 | ~2 hours | **Batch test all CONC** |
+| **Approach 1: Single Config** ⭐ | `./kimi_benchmark submit "Team"` | 1 | ~15-20 mins | **Development phase rapid iteration** |
+| **Approach 2: Multi-Concurrency** ⭐ | `./kimi_benchmark submit "Team" -isl 1024 -osl 1024` | 6 | ~2 hours | **Batch test all CONC** |
 
 **Recommended Workflow** 🎯:
 1. **Development Phase**: Use **Approach 1** (single config + submit) for rapid iteration, view Leaderboard real-time
@@ -325,7 +325,7 @@ See `baseline_nv1126` field in result JSON for details.
 
 ### 1. Kernel Optimization ⚡
 - Attention kernel (Flash Attention, PagedAttention)
-- MoE (Mixture of Experts) kernel - Critical for GPT-OSS!
+- MoE (Mixture of Experts) kernel
 - Quantization kernel (FP4/MXFP4)
 
 ### 2. Scheduling Optimization 📊
@@ -364,7 +364,7 @@ tail -f /tmp/vllm-server-*.log | grep -i error
 
 ```bash
 # 1. Load environment variables
-cd /workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x
+cd /workspace/amdgpu_bounty_optimization/kimik25-int4-vllm-mi355x
 source all_conc_var.sh
 
 # 2. Launch vLLM server
@@ -377,13 +377,13 @@ docker exec -ti vllm-dev bash
 source specific_conc_var.sh
 
 # Submit all results for ISL=1024, OSL=1024 (auto-test CONC=4,8,16,32,64,256, ~2 hours)
-./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 1024
+./kimi_benchmark submit "YourTeam" -isl 1024 -osl 1024
 
 # Submit all results for ISL=1024, OSL=8192 (auto-test CONC=4,8,16,32,64,256, ~2 hours)
-./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 8192
+./kimi_benchmark submit "YourTeam" -isl 1024 -osl 8192
 
 # Submit all results for ISL=8192, OSL=1024 (auto-test CONC=4,8,16,32,64,256, ~2 hours)
-./gptoss_benchmark submit "YourTeam" -isl 8192 -osl 1024
+./kimi_benchmark submit "YourTeam" -isl 8192 -osl 1024
 ```
 
 **Each command will automatically**:
@@ -394,9 +394,9 @@ source specific_conc_var.sh
 - ✅ Generate summary report
 
 **Leaderboard Auto-Routing**:
-- `ISL=1024, OSL=1024` → https://daniehua-gptoss-fp4-vllm-isl1024osl1024.hf.space
-- `ISL=1024, OSL=8192` → https://daniehua-gptoss-fp4-vllm-isl1024osl8192.hf.space
-- `ISL=8192, OSL=1024` → https://daniehua-gptoss-fp4-vllm-isl8192osl1024.hf.space
+- `ISL=1024, OSL=1024` → https://daniehua-kimik25-int4-vllm-isl1024osl1024.hf.space
+- `ISL=1024, OSL=8192` → https://daniehua-kimik25-int4-vllm-isl1024osl8192.hf.space
+- `ISL=8192, OSL=1024` → https://daniehua-kimik25-int4-vllm-isl8192osl1024.hf.space
 
 **Result Output Example**:
 ```
@@ -408,7 +408,7 @@ OSL: 1024
 Mode: submit
 CONC values: 4, 8, 16
 Team: YourTeam
-Leaderboard: https://daniehua-gptoss-fp4-vllm-isl1024osl1024.hf.space
+Leaderboard: https://daniehua-kimik25-int4-vllm-isl1024osl1024.hf.space
 ============================================
 
 Results directory: batch_isl1024_osl1024_20251127_150000
@@ -438,13 +438,13 @@ Results saved in: batch_isl1024_osl1024_20251127_150000/
 **Development Phase Quick Validation**:
 ```bash
 # Recommended: Test and submit directly (all-in-one) ⭐
-./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 1024
+./kimi_benchmark submit "YourTeam" -isl 1024 -osl 1024
 
 # Optional: Accuracy test only (quick validation)
-./gptoss_benchmark acc -isl 1024 -osl 1024
+./kimi_benchmark acc -isl 1024 -osl 1024
 
 # Optional: Full test without submitting
-./gptoss_benchmark perf -isl 1024 -osl 1024
+./kimi_benchmark perf -isl 1024 -osl 1024
 ```
 
 ## FAQ
@@ -461,7 +461,7 @@ ERROR: Accuracy validation FAILED!
 ### Q: How to launch server only without running tests?
 
 ```bash
-cd /workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x
+cd /workspace/amdgpu_bounty_optimization/kimik25-int4-vllm-mi355x
 
 # Load environment variables
 source all_conc_var.sh
@@ -501,7 +501,7 @@ tail -f /tmp/vllm-server-*.log
 Use single configuration mode:
 
 ```bash
-cd /workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x
+cd /workspace/amdgpu_bounty_optimization/kimik25-int4-vllm-mi355x
 
 # 1. Edit specific_conc_var.sh to modify CONC value
 vim specific_conc_var.sh  # Modify CONC=16
@@ -510,21 +510,21 @@ vim specific_conc_var.sh  # Modify CONC=16
 source specific_conc_var.sh
 
 # 3. Recommended: Test and submit directly ⭐
-./gptoss_benchmark submit "YourTeam"
+./kimi_benchmark submit "YourTeam"
 ```
 
 Or set manually:
 ```bash
-cd /workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x
+cd /workspace/amdgpu_bounty_optimization/kimik25-int4-vllm-mi355x
 source specific_conc_var.sh
 export CONC=16  # Override default, test CONC=16 only
-export NUM_PROMPTS=160  # GPT-OSS: CONC * 10
+export NUM_PROMPTS=160 
 
 # Recommended: Submit directly
-./gptoss_benchmark submit "YourTeam"
+./kimi_benchmark submit "YourTeam"
 
 # Optional: Test without submitting
-./gptoss_benchmark perf
+./kimi_benchmark perf
 ```
 
 ### Q: How long do tests take?
@@ -552,41 +552,23 @@ export NUM_PROMPTS=160  # GPT-OSS: CONC * 10
 - ✅ View ranking real-time, immediately know optimization effects
 - ✅ Save time, avoid redundant runs
 
-### Q: What's the difference between GPT-OSS and DeepSeek-R1?
-
-**Main Differences**:
-
-| Feature | GPT-OSS | DeepSeek-R1 |
-|------|---------|------------|
-| Model Size | 120B | ~670B |
-| Architecture | MoE (Mixture of Experts) | Dense |
-| Framework | vLLM | SGLang |
-| CONC Range | 4-16 (8192-1024: 4-8) | 4-64 |
-| NUM_PROMPTS | CONC × 10 | CONC × 50 (1024-1024/8192-1024) / CONC × 20 (1024-8192) |
-| Optimization Focus | MoE kernel, vLLM scheduling | Long context, chunked prefill |
-
-**Optimization Suggestions**:
-- GPT-OSS: Focus on optimizing MoE kernel (A16W4 fused MoE provided by AITER)
-- Adjust compile_sizes and cudagraph_capture_sizes in compilation config
-
-
 ## Recommended Workflow
 
 ```
 Round 1: Familiarize with Baseline
-  ├─ Run baseline test: ./gptoss_benchmark submit "YourTeam"
+  ├─ Run baseline test: ./kimi_benchmark submit "YourTeam"
   ├─ Understand vLLM architecture
   └─ View Leaderboard baseline performance
 
 Round 2: Low-Risk Optimization
   ├─ Adjust compilation config
   ├─ Optimize GPU memory utilization
-  └─ Quick validation: ./gptoss_benchmark submit "YourTeam" (~15-20 mins)
+  └─ Quick validation: ./kimi_benchmark submit "YourTeam" (~15-20 mins)
 
 Round 3: AMD GPU Kernel Optimization
   ├─ Profile to find bottlenecks
   ├─ Optimize MoE kernel (Critical!)
-  └─ Real-time comparison: ./gptoss_benchmark submit "YourTeam", view Leaderboard
+  └─ Real-time comparison: ./kimi_benchmark submit "YourTeam", view Leaderboard
 
 Round 4: System Optimization
   ├─ Async scheduling
@@ -595,9 +577,9 @@ Round 4: System Optimization
 
 Round 5: Batch Submission
   ├─ Test all ISL-OSL combinations
-  ├─ ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 1024
-  ├─ ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 8192
-  └─ ./gptoss_benchmark submit "YourTeam" -isl 8192 -osl 1024
+  ├─ ./kimi_benchmark submit "YourTeam" -isl 1024 -osl 1024
+  ├─ ./kimi_benchmark submit "YourTeam" -isl 1024 -osl 8192
+  └─ ./kimi_benchmark submit "YourTeam" -isl 8192 -osl 1024
 ```
 
 **Key Advantage**: Submit directly after each optimization, view Leaderboard ranking real-time, rapid iteration!
@@ -607,9 +589,9 @@ Round 5: Batch Submission
 - 🔧 [vLLM GitHub](https://github.com/vllm-project/vllm) - Inference framework
 - 🔧 [AITER GitHub](https://github.com/ROCm/aiter) - AMD GPU operator library
 - 📊 Leaderboards:
-  - [ISL=1024, OSL=1024](https://daniehua-gptoss-fp4-vllm-isl1024osl1024.hf.space)
-  - [ISL=1024, OSL=8192](https://daniehua-gptoss-fp4-vllm-isl1024osl8192.hf.space)
-  - [ISL=8192, OSL=1024](https://daniehua-gptoss-fp4-vllm-isl8192osl1024.hf.space)
+  - [ISL=1024, OSL=1024](https://daniehua-kimik25-int4-vllm-isl1024osl1024.hf.space)
+  - [ISL=1024, OSL=8192](https://daniehua-kimik25-int4-vllm-isl1024osl8192.hf.space)
+  - [ISL=8192, OSL=1024](https://daniehua-kimik25-int4-vllm-isl8192osl1024.hf.space)
 
 
 **Good luck! 🚀**
@@ -618,6 +600,5 @@ Remember:
 - **Use submit mode directly**: All-in-one, view ranking real-time ⭐
 - **Performance matters, accuracy matters more!** All optimizations must pass accuracy validation
 - **Rapid iteration**: Submit immediately after each optimization, see effects instantly
-- **Focus on MoE kernel optimization**: GPT-OSS is a MoE model, MoE kernel performance is critical!
 
 

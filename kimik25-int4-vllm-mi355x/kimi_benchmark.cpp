@@ -1,12 +1,12 @@
 // ============================================
-// Benchmark Script - GPT-OSS FP4 Multi-Concurrency Mode (C++ Version)
+// Benchmark Script - kimik2.5 int4 Multi-Concurrency Mode (C++ Version)
 // ============================================
 // Usage:
-//   ./gptoss_benchmark acc                           # Run accuracy test only
-//   ./gptoss_benchmark perf                          # Run accuracy + performance tests
-//   ./gptoss_benchmark submit <team>                 # Run all tests + submit to leaderboard
-//   ./gptoss_benchmark acc -isl 1024 -osl 1024       # Test specific CONC
-//   ./gptoss_benchmark submit <team> -isl 1024 -osl 8192  # Test all CONC + submit
+//   ./kimi_benchmark acc                           # Run accuracy test only
+//   ./kimi_benchmark perf                          # Run accuracy + performance tests
+//   ./kimi_benchmark submit <team>                 # Run all tests + submit to leaderboard
+//   ./kimi_benchmark acc -isl 1024 -osl 1024       # Test specific CONC
+//   ./kimi_benchmark submit <team> -isl 1024 -osl 8192  # Test all CONC + submit
 
 #include <iostream>
 #include <string>
@@ -43,10 +43,10 @@ struct Config {
     string model;
     int port = 8888;
     int tp = 8;
-    int conc = 8;  // GPT-OSS default is 8
+    int conc = 8;
     int isl = 1024;
     int osl = 1024;
-    int max_model_len = 16384;  // GPT-OSS specific
+    int max_model_len = 16384;
     double random_range_ratio = 1.0;
     string result_filename = "result";
     int num_prompts = 0;
@@ -58,7 +58,7 @@ struct Config {
 };
 
 // ============================================
-// Baseline Data Structure (GPT-OSS)
+// Baseline Data Structure
 // ============================================
 struct Baseline {
     double median_e2e;
@@ -177,11 +177,11 @@ string extract_regex_match(const string& text, const regex& pattern, int group =
 string get_leaderboard_url(const string& isl, const string& osl) {
     string key = isl + "_" + osl;
     if (key == "1024_1024") {
-        return "https://daniehua-gptoss-fp4-vllm-isl1024osl1024.hf.space";
+        return "https://daniehua-kimik25-int4-vllm-isl1024-osl1024.hf.space";
     } else if (key == "1024_8192") {
-        return "https://daniehua-gptoss-fp4-vllm-isl1024osl8192.hf.space";
+        return "https://daniehua-kimik25-int4-vllm-isl1024-osl8192.hf.space";
     } else if (key == "8192_1024") {
-        return "https://daniehua-gptoss-fp4-vllm-isl8192osl1024.hf.space";
+        return "https://daniehua-kimik25-int4-vllm-isl8192-osl1024.hf.space";
     } else {
         return "ERROR: wrong isl and osl config, pls check";
     }
@@ -473,7 +473,7 @@ int process_result_json(const Config& cfg, const AccuracyMetrics& acc_metrics) {
 import json
 import sys
 
-# Baseline Data (NV-1126) - GPT-OSS
+# Baseline Data (NV-1126)
 BASELINES = {
     # ISL-OSL=1024-1024
     ('1024', '1024', '4'): {'median_e2e': 2162, 'median_intvty': 434.57,'tput_per_gpu': 413.779},
@@ -836,7 +836,7 @@ int run_single_test(Config cfg, const AccuracyMetrics& acc_metrics) {
 }
 
 // ============================================
-// Run Multi-Concurrency Mode (GPT-OSS specific CONC values)
+// Run Multi-Concurrency Mode
 // ============================================
 int run_multi_conc_mode(Config cfg) {
     cout << "============================================" << endl;
@@ -846,7 +846,6 @@ int run_multi_conc_mode(Config cfg) {
     cout << "OSL: " << cfg.osl_arg << endl;
     cout << "Mode: " << cfg.mode << endl;
     
-    // GPT-OSS specific: determine CONC values based on ISL-OSL
     vector<int> conc_values;
     // if (cfg.isl_arg == "1024" && cfg.osl_arg == "8192") {
     //     conc_values = {4, 8, 16};
@@ -855,7 +854,7 @@ int run_multi_conc_mode(Config cfg) {
     //     conc_values = {4, 8};
     //     cout << "CONC values: 4, 8" << endl;
     // }
-    conc_values = {4, 8, 16, 32, 64, 256}; // FOR 128, ATOM can beat g200 trt
+    conc_values = {8, 16, 32, 64, 128, 256};
     cout << "CONC values: 4, 8, 16, 32, 64, 256" << endl;
     string lb_url;
     if (cfg.mode == "submit") {
@@ -894,7 +893,6 @@ int run_multi_conc_mode(Config cfg) {
         cout << "Testing CONC=" << conc << endl;
         cout << "============================================" << endl;
         
-        // GPT-OSS: NUM_PROMPTS = CONC * 10
         int num_prompts = conc * 10;
         
         string result_filename = "result_isl" + cfg.isl_arg + "_osl" + cfg.osl_arg + "_conc" + to_string(conc);
@@ -1047,7 +1045,7 @@ int main(int argc, char** argv) {
         cfg.model = get_env_var("MODEL");
         if (cfg.model.empty()) {
             cerr << "ERROR: MODEL environment variable is required" << endl;
-            cerr << "Example: export MODEL='openai/gpt-oss-120b'" << endl;
+            cerr << "Example: export MODEL='moonshotai/Kimi-K2.5'" << endl;
             return 1;
         }
         
@@ -1072,7 +1070,7 @@ int main(int argc, char** argv) {
     cfg.model = get_env_var("MODEL");
     if (cfg.model.empty()) {
         cerr << "ERROR: MODEL environment variable is not set" << endl;
-        cerr << "Example: export MODEL='openai/gpt-oss-120b'" << endl;
+        cerr << "Example: export MODEL='moonshotai/Kimi-K2.5'" << endl;
         return 1;
     }
     
@@ -1131,7 +1129,7 @@ int main(int argc, char** argv) {
     if (!num_prompts_str.empty()) {
         cfg.num_prompts = stoi(num_prompts_str);
     } else {
-        cout << "WARNING: NUM_PROMPTS not set, calculating based on CONC (GPT-OSS: CONC * 10)" << endl;
+        cout << "WARNING: NUM_PROMPTS not set, calculating based on CONC" << endl;
         cfg.num_prompts = cfg.conc * 10;
     }
     
