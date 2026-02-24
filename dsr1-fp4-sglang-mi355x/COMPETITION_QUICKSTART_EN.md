@@ -295,7 +295,7 @@ source all_conc_var.sh
 
 ### Accuracy Requirements (Must Meet)
 
-All metrics must be within baseline ± 3% range:
+All metrics must be:
 - gsm8k_metric >= 0.93
 
 ❌ Exceeding range will immediately terminate testing, performance benchmark will not run
