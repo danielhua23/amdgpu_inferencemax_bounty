@@ -431,8 +431,8 @@ int run_accuracy_test(const Config& cfg, AccuracyMetrics& metrics) {
 // Validate Accuracy Metrics (GSM8K Baseline)
 // ============================================
 int validate_accuracy(const AccuracyMetrics& metrics) {
-    // Override via environment variables if you need a different threshold.
-    const double BASELINE_GSM8K_METRIC = stod(get_env_var("GSM8K_BASELINE_METRIC", "0.38"));
+    // https://github.com/sgl-project/sglang/blob/main/test/registered/amd/accuracy/mi35x/test_kimi_k25_eval_mi35x.py
+    const double BASELINE_GSM8K_METRIC = stod(get_env_var("GSM8K_BASELINE_METRIC", "0.92"));
     const double GSM8K_TOL = stod(get_env_var("GSM8K_TOL", "0.0"));  // absolute tolerance
     const double MIN_ACCEPTED = BASELINE_GSM8K_METRIC - GSM8K_TOL;
     
