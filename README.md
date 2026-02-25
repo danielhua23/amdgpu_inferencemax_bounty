@@ -115,13 +115,15 @@ Each **Model** represents an independent bounty:
 
 ## 🚀 Quick Start Guide
 
-### For vLLM (GPT-OSS) Optimization
+### For vLLM Optimization
+Note: it's not mandatory that you must use vllm to optimize GPT-OSS, any inference framework you familiar with is accepted, but it's better to pick mainstream framework
 
-Please refer to [GPTOSS_COMPETITION_QUICKSTART.md](https://github.com/danielhua23/amdgpu_inferencemax_bounty/blob/main/gptoss-fp4-vllm-mi355x/GPTOSS_COMPETITION_QUICKSTART_EN.md)
+Please refer to [GPTOSS_COMPETITION_QUICKSTART.md](https://github.com/danielhua23/amdgpu_bounty_optimization/blob/main/gptoss-fp4-vllm-mi355x/GPTOSS_COMPETITION_QUICKSTART_EN.md)
 
-### For SGLang (DeepSeek-R1) Optimization
+### For SGLang Optimization
+Note: it's not mandatory that you must use sglang to optimize DeepSeek-R1, any inference framework you familiar with is accepted, but it's better to pick mainstream framework
 
-Please refer to [COMPETITION_QUICKSTART.md](https://github.com/danielhua23/amdgpu_inferencemax_bounty/blob/main/dsr1-fp4-sglang-mi355x/COMPETITION_QUICKSTART_EN.md)
+Please refer to [COMPETITION_QUICKSTART.md](https://github.com/danielhua23/amdgpu_bounty_optimization/blob/main/dsr1-fp4-sglang-mi355x/COMPETITION_QUICKSTART_EN.md)
 
 ## 📈 Performance Metrics
 
@@ -131,8 +133,6 @@ Your submission will be evaluated on:
 2. **Latency** (ms) - Lower is better
 3. **Interactivity** (tokens/sec/user) - Higher is better
 4. **E2E Latency** (ms) - Lower is better
-
-All metrics are compared against NVIDIA B200 TRT baselines from [InferenceMAX](https://inferencemax.semianalysis.com/).
 
 ## 📋 Submission Checklist
 
