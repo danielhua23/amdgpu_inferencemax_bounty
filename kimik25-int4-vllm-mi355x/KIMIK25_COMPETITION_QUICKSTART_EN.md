@@ -67,18 +67,18 @@ git clone https://github.com/danielhua23/amdgpu_bounty_optimization.git
 
 ```bash
 docker run -it \
-  --name vllm-dev \
+  --name vllm-dev-kimi \
   --ipc=host --shm-size=16g --network=host \
   --privileged --cap-add=CAP_SYS_ADMIN \
   --device=/dev/kfd --device=/dev/dri --device=/dev/mem \
   --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
-  -v /nfsdata/hf_hub_cache-1/:/root/.cache/huggingface \
+  -v /docker/huggingface/:/root/.cache/huggingface \
   -v ~/competition:/workspace \
   -v ~/competition/aiter:/workspace/aiter \
   -v ~/competition/vllm:/workspace/vllm \
   -e HF_TOKEN=your_huggingface_token_here \
-  vllm/vllm-openai-rocm:v0.15.1 \
-  /bin/bash
+  --entrypoint /bin/bash \
+  vllm/vllm-openai-rocm:v0.15.1
 ```
 
 **Mount Instructions**:
@@ -307,7 +307,7 @@ source all_conc_var.sh
 ### Accuracy Requirements (Must Meet)
 
 Accuracy requirement:
-- `gsm8k_metric > 0.38`
+- `gsm8k_metric > 0.92`
 
 ❌ Exceeding range will immediately terminate testing, performance benchmark will not run
 
@@ -453,7 +453,7 @@ Results saved in: batch_isl1024_osl1024_20251127_150000/
 
 ```
 ERROR: Accuracy validation FAILED!
-× gsm8k_metric: 0.37 <= 0.38
+× gsm8k_metric: 0.91 <= 0.92
 ```
 
 **Solution**: Your optimization affected model quality, need to adjust algorithm or parameters

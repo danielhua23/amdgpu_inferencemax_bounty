@@ -257,6 +257,7 @@ int run_benchmark_serving(const Config& cfg) {
         << " --random-range-ratio " << cfg.random_range_ratio
         << " --num-prompts " << cfg.num_prompts
         << " --max-concurrency " << cfg.conc
+        << " --trust-remote-code"
         << " --request-rate inf"
         << " --ignore-eos"
         << " --save-result"
@@ -345,7 +346,7 @@ int run_accuracy_test_gsm8k(const Config& cfg, AccuracyMetrics& metrics) {
     cmd << "lm_eval --model local-completions"
         << " --model_args model=" << cfg.model
         << ",base_url=http://0.0.0.0:" << cfg.port
-        << "/v1/completions,num_concurrent=65,max_retries=1,tokenized_requests=False"
+        << "/v1/completions,num_concurrent=65,max_retries=1,tokenized_requests=False,trust_remote_code=True"
         << " --tasks gsm8k"
         << " --num_fewshot 3"
         << " 2>&1";

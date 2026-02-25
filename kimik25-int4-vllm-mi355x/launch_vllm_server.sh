@@ -4,7 +4,7 @@
 # vLLM Server Launch Script for kimik2.5 int4
 # ============================================
 # This script launches a vLLM server with optimized settings
-# for AMD MI355X GPUs running FP4 models
+# for AMD MI355X GPUs running INT4 models
 #
 # Required Environment Variables:
 #   MODEL: Model path (e.g., moonshotai/Kimi-K2.5)
@@ -109,6 +109,6 @@ vllm serve $MODEL --port $PORT \
 --block-size=64 \
 --disable-log-requests \
 --trust-remote-code \
---mm-encoder-tp-mode data > $SERVER_LOG 2>&1 &
+--mm-encoder-tp-mode data # > $SERVER_LOG 2>&1 &
 set +x
 
