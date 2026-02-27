@@ -1,4 +1,4 @@
-export MODEL="amd/DeepSeek-R1-0528-MXFP4-Preview"
+export MODEL="amd/DeepSeek-R1-0528-MXFP4"
 export PORT=8888
 export TP=8
 export ISL=1024

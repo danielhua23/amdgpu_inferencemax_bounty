@@ -1093,7 +1093,7 @@ int main(int argc, char** argv) {
         cfg.model = get_env_var("MODEL");
         if (cfg.model.empty()) {
             cerr << "ERROR: MODEL environment variable is required" << endl;
-            cerr << "Example: export MODEL='amd/DeepSeek-R1-0528-MXFP4-Preview'" << endl;
+            cerr << "Example: export MODEL='amd/DeepSeek-R1-0528-MXFP4'" << endl;
             return 1;
         }
         
@@ -1122,7 +1122,7 @@ int main(int argc, char** argv) {
     cfg.model = get_env_var("MODEL");
     if (cfg.model.empty()) {
         cerr << "ERROR: MODEL environment variable is not set" << endl;
-        cerr << "Example: export MODEL='amd/DeepSeek-R1-0528-MXFP4-Preview'" << endl;
+        cerr << "Example: export MODEL='amd/DeepSeek-R1-0528-MXFP4'" << endl;
         return 1;
     }
     

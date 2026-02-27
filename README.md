@@ -52,6 +52,7 @@ Once selected as a winner:
    - Waiting for us to open a Pull Request to the upstream repository like:
      - [vLLM GitHub](https://github.com/vllm-project/vllm)
      - [SGLang GitHub](https://github.com/sgl-project/sglang)
+     - [ATOM GitHub](https://github.com/ROCm/ATOM)
      - others
    
 2. **Code Merge** (Within 2 weeks):
@@ -71,7 +72,7 @@ Once selected as a winner:
 | Model | Backend | Directory | Leaderboard |
 |-------|---------|-----------|-------------|
 | **DeepSeek-R1 FP4** | SGLang | `dsr1-fp4-sglang-mi355x/` | https://daniehua-dsr1-fp4-sgl-isl*-osl*.hf.space |
-| **DeepSeek-R1 MTP FP4** | SGLang | `dsr1-fp4mtp-sglang-mi355x/` | https://daniehua-dsr1-fp4mtp-sgl-isl*-osl*.hf.space |
+| **DeepSeek-R1 MTP FP4** | SGLang | `dsr1-fp4-atom-mtp-mi355x/` | https://daniehua-dsr1-atom-mtp-sgl-isl*-osl*.hf.space |
 | **GPT-OSS FP4 (120B)** | vLLM | `gptoss-fp4-vllm-mi355x/` | https://daniehua-gptoss-fp4-vllm-isl*-osl*.hf.space |
 | **moonshotai/Kimi-K2.5** | vLLM | `kimik25-int4-vllm-mi355x/` | https://daniehua-kimik25-int4-vllm-isl*-osl*.hf.space |
 
@@ -172,9 +173,9 @@ Before submitting, ensure you have:
 - ISL=8192, OSL=1024: https://daniehua-gptoss-fp4-vllm-isl8192osl1024.hf.space
 
 #### DeepSeek-R1 MTP
-- ISL=1024, OSL=1024: https://daniehua-dsr1-fp4mtp-sgl-isl1024-osl1024.hf.space
-- ISL=1024, OSL=8192: https://daniehua-dsr1-fp4mtp-sgl-isl1024-osl8192.hf.space
-- ISL=8192, OSL=1024: https://daniehua-dsr1-fp4mtp-sgl-isl8192-osl1024.hf.space
+- ISL=1024, OSL=1024: https://daniehua-dsr1-fp4-atom-mtp-isl1024-osl1024.hf.space
+- ISL=1024, OSL=8192: https://daniehua-dsr1-fp4-atom-mtp-isl1024-osl8192.hf.space
+- ISL=8192, OSL=1024: https://daniehua-dsr1-fp4-atom-mtp-isl8192-osl1024.hf.space
 
 #### kimi-k2.5
 - ISL=1024, OSL=1024: https://daniehua-kimik25-int4-vllm-isl1024-osl1024.hf.space

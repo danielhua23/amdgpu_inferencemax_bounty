@@ -7,7 +7,7 @@
 # for AMD MI355X GPUs running FP4 models
 #
 # Required Environment Variables:
-#   MODEL: Model path (e.g., amd/DeepSeek-R1-0528-MXFP4-Preview)
+#   MODEL: Model path (e.g., amd/DeepSeek-R1-0528-MXFP4)
 #   PORT: Server port (default: 8888)
 #   TP: Tensor parallel size (e.g., 4, 8)
 #   ISL: Input sequence length (for PREFILL_SIZE optimization)
@@ -27,7 +27,7 @@
 
 if [[ -z "$MODEL" ]]; then
     echo "ERROR: MODEL environment variable is required"
-    echo "Example: export MODEL=amd/DeepSeek-R1-0528-MXFP4-Preview"
+    echo "Example: export MODEL=amd/DeepSeek-R1-0528-MXFP4"
     exit 1
 fi
 
