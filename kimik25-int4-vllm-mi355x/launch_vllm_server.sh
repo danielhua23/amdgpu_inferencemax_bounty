@@ -29,7 +29,7 @@ fi
 
 if [[ -z "$PORT" ]]; then
     echo "WARNING: PORT not set, using default: 8888"
-    PORT=8878
+    PORT=8888
 fi
 
 if [[ -z "$TP" ]]; then
@@ -44,27 +44,18 @@ if [[ -z "$MAX_MODEL_LEN" ]]; then
 fi
 
 # ============================================
+# Ray compatibility (match InferenceX kimik2.5_int4_mi355x.sh)
+# ============================================
+if [[ -n "$ROCR_VISIBLE_DEVICES" ]]; then
+  export HIP_VISIBLE_DEVICES="$ROCR_VISIBLE_DEVICES"
+fi
+
+# ============================================
 # Set Default Values
 # ============================================
 
 GPU_MEMORY_UTIL=${GPU_MEMORY_UTIL:-0.95}
 BLOCK_SIZE=${BLOCK_SIZE:-64}
-
-# Enable AMD-specific optimizations
-export VLLM_USE_AITER_UNIFIED_ATTENTION=1
-export VLLM_ROCM_USE_AITER_MHA=0
-export VLLM_ROCM_USE_AITER_FUSED_MOE_A16W4=1
-
-# ============================================
-# Create Compilation Config
-# ============================================
-
-cat > /tmp/vllm_config.yaml << 'EOF'
-compilation-config: '{"compile_sizes":[1,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82,84,86,88,90,92,94,96,98,100,102,104,106,108,110,112,114,116,118,120,122,124,126,128,256,512,1024,2048,8192] , "cudagraph_capture_sizes":[1,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82,84,86,88,90,92,94,96,98,100,102,104,106,108,110,112,114,116,118,120,122,124,126,128,136,144,152,160,168,176,184,192,200,208,216,224,232,240,248,256,264,272,280,288,296,304,312,320,328,336,344,352,360,368,376,384,392,400,408,416,424,432,440,448,456,464,472,480,488,496,504,512,520,528,536,544,552,560,568,576,584,592,600,608,616,624,632,640,648,656,664,672,680,688,696,704,712,720,728,736,744,752,760,768,776,784,792,800,808,816,824,832,840,848,856,864,872,880,888,896,904,912,920,928,936,944,952,960,968,976,984,992,1000,1008,1016,1024,2048,4096,8192] , "cudagraph_mode": "FULL_AND_PIECEWISE"}' 
-EOF
-
-echo "INFO: vLLM compilation config created at /tmp/vllm_config.yaml"
-cat /tmp/vllm_config.yaml
 
 # ============================================
 # Create Server Log File
@@ -104,11 +95,11 @@ echo ""
 set -x
 vllm serve $MODEL --port $PORT \
 --tensor-parallel-size=$TP \
---gpu-memory-utilization 0.95 \
+--gpu-memory-utilization $GPU_MEMORY_UTIL \
 --max-model-len $MAX_MODEL_LEN \
---block-size=64 \
+--block-size=$BLOCK_SIZE \
 --disable-log-requests \
 --trust-remote-code \
---mm-encoder-tp-mode data # > $SERVER_LOG 2>&1 &
+--mm-encoder-tp-mode data
 set +x
 

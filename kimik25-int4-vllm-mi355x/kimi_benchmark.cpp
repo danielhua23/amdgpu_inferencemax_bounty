@@ -261,6 +261,7 @@ int run_benchmark_serving(const Config& cfg) {
         << " --request-rate inf"
         << " --ignore-eos"
         << " --save-result"
+        << " --num-warmups " << (2 * cfg.conc)
         << " --percentile-metrics 'ttft,tpot,itl,e2el'"
         << " --result-dir " << cfg.script_dir << "/"
         << " --result-filename " << cfg.result_filename << ".json";

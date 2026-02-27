@@ -29,7 +29,7 @@ fi
 
 if [[ -z "$PORT" ]]; then
     echo "WARNING: PORT not set, using default: 8888"
-    PORT=8878
+    PORT=8888
 fi
 
 if [[ -z "$TP" ]]; then
@@ -44,14 +44,29 @@ if [[ -z "$MAX_MODEL_LEN" ]]; then
 fi
 
 # ============================================
+# ROCm / Ray compatibility (match InferenceX gptoss_fp4_mi355x.sh)
+# ============================================
+# If MEC FW is older than 177, disable RCCL scratch reclaim to avoid crashes.
+if command -v rocm-smi &>/dev/null; then
+  version=$(rocm-smi --showfw 2>/dev/null | grep MEC | head -n 1 | awk '{print $NF}')
+  if [[ -z "$version" || "$version" -lt 177 ]]; then
+    export HSA_NO_SCRATCH_RECLAIM=1
+  fi
+fi
+if [[ -n "$ROCR_VISIBLE_DEVICES" ]]; then
+  export HIP_VISIBLE_DEVICES="$ROCR_VISIBLE_DEVICES"
+fi
+
+# ============================================
 # Set Default Values
 # ============================================
 
 GPU_MEMORY_UTIL=${GPU_MEMORY_UTIL:-0.95}
 BLOCK_SIZE=${BLOCK_SIZE:-64}
 
-# Enable AMD-specific optimizations
-export VLLM_USE_AITER_UNIFIED_ATTENTION=1
+# Enable AMD-specific optimizations (match InferenceX gptoss_fp4_mi355x.sh)
+export VLLM_ROCM_USE_AITER=1
+export VLLM_ROCM_USE_AITER_UNIFIED_ATTENTION=1
 export VLLM_ROCM_USE_AITER_MHA=0
 export VLLM_ROCM_USE_AITER_FUSED_MOE_A16W4=1
 
@@ -106,11 +121,9 @@ vllm serve $MODEL --port $PORT \
 --tensor-parallel-size=$TP \
 --gpu-memory-utilization $GPU_MEMORY_UTIL \
 --max-model-len $MAX_MODEL_LEN \
-# --max-seq-len-to-capture $MAX_MODEL_LEN \ deprecated
 --config /tmp/vllm_config.yaml \
 --block-size=$BLOCK_SIZE \
 --no-enable-prefix-caching \
---disable-log-requests \
---async-scheduling
+--disable-log-requests
 set +x
 

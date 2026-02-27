@@ -277,6 +277,7 @@ int run_benchmark_serving(const Config& cfg) {
         << " --request-rate inf"
         << " --ignore-eos"
         << " --save-result"
+        << " --num-warmups " << (2 * cfg.conc)
         << " --percentile-metrics 'ttft,tpot,itl,e2el'"
         << " --result-dir " << cfg.script_dir << "/"
         << " --result-filename " << cfg.result_filename << ".json";
@@ -925,13 +926,8 @@ int run_multi_conc_mode(Config cfg) {
         cout << "Testing CONC=" << conc << endl;
         cout << "============================================" << endl;
         
-        // Calculate NUM_PROMPTS
-        int num_prompts;
-        if (cfg.osl_arg == "8192") {
-            num_prompts = conc * 20;
-        } else {
-            num_prompts = conc * 50;
-        }
+        // Calculate NUM_PROMPTS (match InferenceX: CONC * 10)
+        int num_prompts = conc * 10;
         
         // Set result filename
         string result_filename = "result_isl" + cfg.isl_arg + "_osl" + cfg.osl_arg + "_conc" + to_string(conc);
@@ -1178,12 +1174,8 @@ int main(int argc, char** argv) {
     if (!num_prompts_str.empty()) {
         cfg.num_prompts = stoi(num_prompts_str);
     } else {
-        cout << "WARNING: NUM_PROMPTS not set, calculating based on CONC and OSL" << endl;
-        if (cfg.osl == 8192) {
-            cfg.num_prompts = cfg.conc * 20;
-        } else {
-            cfg.num_prompts = cfg.conc * 50;
-        }
+        cout << "WARNING: NUM_PROMPTS not set, using CONC * 10 (match InferenceX)" << endl;
+        cfg.num_prompts = cfg.conc * 10;
     }
     
     cfg.lb_url_override = get_env_var("LB_URL_OVERRIDE");

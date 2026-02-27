@@ -52,8 +52,9 @@ NUM_CONTINUOUS_DECODE_STEPS=${NUM_CONTINUOUS_DECODE_STEPS:-4}
 DISABLE_RADIX_CACHE=${DISABLE_RADIX_CACHE:-true}
 WAIT_FOR_READY=${WAIT_FOR_READY:-false}
 
-# Enable AMD-specific optimizations
+# Enable AMD-specific optimizations (match InferenceX dsr1_fp4_mi355x.sh)
 export SGLANG_USE_AITER=1
+export ROCM_QUICK_REDUCE_QUANTIZATION=INT4
 
 # ============================================
 # Calculate Optimal PREFILL_SIZE
@@ -96,7 +97,9 @@ SGLANG_CMD="python3 -m sglang.launch_server --model-path=$MODEL --trust-remote-c
 --mem-fraction-static=$MEM_FRACTION \
 --num-continuous-decode-steps=$NUM_CONTINUOUS_DECODE_STEPS \
 --max-prefill-tokens=$PREFILL_SIZE \
---cuda-graph-max-bs=$CUDA_GRAPH_MAX_BS"
+--cuda-graph-max-bs=$CUDA_GRAPH_MAX_BS \
+--attention-backend aiter \
+--kv-cache-dtype fp8_e4m3"
 
 # Add optional flags
 if [[ "$DISABLE_RADIX_CACHE" == "true" ]]; then
