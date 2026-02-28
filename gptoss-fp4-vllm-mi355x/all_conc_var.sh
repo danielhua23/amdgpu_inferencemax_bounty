@@ -10,9 +10,7 @@
 # Usage:
 #   source all_conc_var.sh
 #   bash launch_vllm_server.sh  # Start server first
-#   ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 1024
-#   ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 8192
-#   ./gptoss_benchmark submit "YourTeam" -isl 8192 -osl 1024
+#   ./gptoss_benchmark submit "YourTeam" -isl 8192 -osl 1024   # Only supported case; CONC=8,32,128
 
 # ============================================
 # Server Configuration
@@ -32,12 +30,9 @@ export MAX_MODEL_LEN=16384
 # Testing Configuration
 # ============================================
 
-# Note: ISL, OSL, CONC will be set by the benchmark script based on -isl/-osl flags
-# The script will automatically test the following CONC values:
-#   - ISL=1024, OSL=1024: CONC=4,8,16 (3 configurations)
-#   - ISL=1024, OSL=8192: CONC=4,8,16 (3 configurations)
-#   - ISL=8192, OSL=1024: CONC=4,8 (2 configurations)
-
+# Only ISL=8192, OSL=1024 (8k/1k) is benchmarked; CONC=8,32,128 when using -isl 8192 -osl 1024
+export ISL=8192
+export OSL=1024
 export RANDOM_RANGE_RATIO=1.0
 
 # ============================================
@@ -63,9 +58,7 @@ echo ""
 echo "Next steps:"
 echo "1. bash launch_vllm_server.sh  # Start server"
 echo "2. Wait for server to be ready (see 'Uvicorn running...')"
-echo "3. Run multi-concurrency tests:"
-echo "   ./gptoss_benchmark submit \"YourTeam\" -isl 1024 -osl 1024"
-echo "   ./gptoss_benchmark submit \"YourTeam\" -isl 1024 -osl 8192"
+echo "3. Run multi-concurrency test (only 8k/1k):"
 echo "   ./gptoss_benchmark submit \"YourTeam\" -isl 8192 -osl 1024"
 echo "============================================"
 

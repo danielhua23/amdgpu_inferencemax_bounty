@@ -55,7 +55,12 @@ WAIT_FOR_READY=${WAIT_FOR_READY:-false}
 # Enable AMD-specific optimizations (match InferenceX dsr1_fp4_mi355x.sh)
 export SGLANG_USE_AITER=1
 export ROCM_QUICK_REDUCE_QUANTIZATION=INT4
-
+# ============================================
+# MTP (Multi-Token Prediction) Config - EAGLE speculative decoding
+# ============================================
+SPECULATIVE_NUM_STEPS=2
+SPECULATIVE_DRAFT_TOKENS=3
+SPECULATIVE_EAGLE_TOPK=1
 # ============================================
 # Calculate Optimal PREFILL_SIZE
 # ============================================
@@ -99,6 +104,10 @@ SGLANG_CMD="python3 -m sglang.launch_server --model-path=$MODEL --trust-remote-c
 --max-prefill-tokens=$PREFILL_SIZE \
 --cuda-graph-max-bs=$CUDA_GRAPH_MAX_BS \
 --attention-backend aiter \
+--speculative-algorithm EAGLE \
+--speculative-num-steps $SPECULATIVE_NUM_STEPS \
+--speculative-num-draft-tokens $SPECULATIVE_DRAFT_TOKENS \
+--speculative-eagle-topk $SPECULATIVE_EAGLE_TOPK \
 --kv-cache-dtype fp8_e4m3"
 
 # Add optional flags

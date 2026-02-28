@@ -30,12 +30,9 @@ export MAX_MODEL_LEN=16384
 # Testing Configuration - Single Configuration
 # ============================================
 
-# Input/Output Sequence Lengths
-export ISL=1024
+# Only 8k/1k is benchmarked; CONC = 8, 32, or 128
+export ISL=8192
 export OSL=1024
-
-# Concurrency Level
-# we have 4,8,16,32,64,256 except 128
 export CONC=8
 
 # Random Range Ratio

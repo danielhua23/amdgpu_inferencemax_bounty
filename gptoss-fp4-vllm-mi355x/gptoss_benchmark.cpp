@@ -2,11 +2,10 @@
 // Benchmark Script - GPT-OSS FP4 Multi-Concurrency Mode (C++ Version)
 // ============================================
 // Usage:
-//   ./gptoss_benchmark acc                           # Run accuracy test only
-//   ./gptoss_benchmark perf                          # Run accuracy + performance tests
-//   ./gptoss_benchmark submit <team>                 # Run all tests + submit to leaderboard
-//   ./gptoss_benchmark acc -isl 1024 -osl 1024       # Test specific CONC
-//   ./gptoss_benchmark submit <team> -isl 1024 -osl 8192  # Test all CONC + submit
+//   ./gptoss_benchmark acc                                    # Run accuracy test only (ISL=8192, OSL=1024)
+//   ./gptoss_benchmark perf                                   # Run accuracy + performance tests
+//   ./gptoss_benchmark submit <team>                         # Run all tests + submit to leaderboard
+//   ./gptoss_benchmark submit <team> -isl 8192 -osl 1024     # Batch test CONC=8,32,128 + submit (only supported case)
 
 #include <iostream>
 #include <string>
@@ -43,8 +42,8 @@ struct Config {
     string model;
     int port = 8888;
     int tp = 8;
-    int conc = 8;  // GPT-OSS default is 8
-    int isl = 1024;
+    int conc = 8;
+    int isl = 8192;
     int osl = 1024;
     int max_model_len = 16384;  // GPT-OSS specific
     double random_range_ratio = 1.0;
@@ -66,19 +65,11 @@ struct Baseline {
     double tput_per_gpu;
 };
 
+// Only ISL=8192, OSL=1024 (8k/1k) is benchmarked; CONC = 8, 32, 128
 map<string, Baseline> BASELINES = {
-    // ISL-OSL=1024-1024
-    {"1024_1024_4", {2162, 434.57, 413.779}},
-    {"1024_1024_8", {2646, 364.58, 690.565}},
-    
-    // ISL-OSL=1024-8192
-    {"1024_8192_4", {16585, 433.22, 241.18}},
-    {"1024_8192_8", {19939, 374.06, 407.268}},
-    {"1024_8192_16", {22496, 332.04, 719.886}},
-    
-    // ISL-OSL=8192-1024
-    {"8192_1024_4", {2275, 408.40, 1752.338}},
     {"8192_1024_8", {2792, 342.70, 2892.223}},
+    {"8192_1024_32", {2792, 342.70, 2892.223}},  // placeholder; update with real baseline when available
+    {"8192_1024_128", {2792, 342.70, 2892.223}}, // placeholder; update with real baseline when available
 };
 
 // ============================================
@@ -474,20 +465,11 @@ int process_result_json(const Config& cfg, const AccuracyMetrics& acc_metrics) {
 import json
 import sys
 
-# Baseline Data (NV-1126) - GPT-OSS
+# Baseline Data (NV-1126) - GPT-OSS; only ISL=8192, OSL=1024 (8k/1k), CONC=8,32,128
 BASELINES = {
-    # ISL-OSL=1024-1024
-    ('1024', '1024', '4'): {'median_e2e': 2162, 'median_intvty': 434.57,'tput_per_gpu': 413.779},
-    ('1024', '1024', '8'): {'median_e2e': 2646, 'median_intvty': 364.58,'tput_per_gpu': 690.565},
-    
-    # ISL-OSL=1024-8192
-    ('1024', '8192', '4'): {'median_e2e': 16585, 'median_intvty': 433.22,'tput_per_gpu': 241.18},
-    ('1024', '8192', '8'): {'median_e2e': 19939, 'median_intvty': 374.06,'tput_per_gpu': 407.268},
-    ('1024', '8192', '16'): {'median_e2e': 22496, 'median_intvty': 332.04,'tput_per_gpu': 719.886},
-    
-    # ISL-OSL=8192-1024
-    ('8192', '1024', '4'): {'median_e2e': 2275, 'median_intvty': 408.40,'tput_per_gpu': 1752.338},
     ('8192', '1024', '8'): {'median_e2e': 2792, 'median_intvty': 342.70,'tput_per_gpu': 2892.223},
+    ('8192', '1024', '32'): {'median_e2e': 2792, 'median_intvty': 342.70,'tput_per_gpu': 2892.223},
+    ('8192', '1024', '128'): {'median_e2e': 2792, 'median_intvty': 342.70,'tput_per_gpu': 2892.223},
 }
 
 result_file = sys.argv[1]
@@ -846,18 +828,11 @@ int run_multi_conc_mode(Config cfg) {
     cout << "ISL: " << cfg.isl_arg << endl;
     cout << "OSL: " << cfg.osl_arg << endl;
     cout << "Mode: " << cfg.mode << endl;
-    
-    // GPT-OSS specific: determine CONC values based on ISL-OSL
-    vector<int> conc_values;
-    // if (cfg.isl_arg == "1024" && cfg.osl_arg == "8192") {
-    //     conc_values = {4, 8, 16};
-    //     cout << "CONC values: 4, 8, 16" << endl;
-    // } else {
-    //     conc_values = {4, 8};
-    //     cout << "CONC values: 4, 8" << endl;
-    // }
-    conc_values = {4, 8, 16, 32, 64, 256}; // FOR 128, ATOM can beat g200 trt
-    cout << "CONC values: 4, 8, 16, 32, 64, 256" << endl;
+    if (cfg.isl_arg != "8192" || cfg.osl_arg != "1024") {
+        cerr << "ERROR: Only ISL=8192, OSL=1024 (8k/1k) is supported. Use: -isl 8192 -osl 1024" << endl;
+        return 1;
+    }
+    cout << "CONC values: 8, 32, 128" << endl;
     string lb_url;
     if (cfg.mode == "submit") {
         cout << "Team: " << cfg.team_name << endl;
@@ -889,6 +864,7 @@ int run_multi_conc_mode(Config cfg) {
     summary << endl;
     summary.close();
     
+    vector<int> conc_values = {8, 32, 128};
     for (int conc : conc_values) {
         cout << endl;
         cout << "============================================" << endl;
@@ -1102,14 +1078,14 @@ int main(int argc, char** argv) {
     if (!isl_str.empty()) {
         cfg.isl = stoi(isl_str);
     } else {
-        cout << "WARNING: ISL not set, using default 1024" << endl;
+        cout << "WARNING: ISL not set, using default 8192" << endl;
     }
     
     string osl_str = get_env_var("OSL");
     if (!osl_str.empty()) {
         cfg.osl = stoi(osl_str);
     } else {
-        cout << "WARNING: OSL not set, using default 1024" << endl;
+        cout << "WARNING: OSL not set, using default 1024 (8k/1k)" << endl;
     }
     
     string max_model_len_str = get_env_var("MAX_MODEL_LEN");

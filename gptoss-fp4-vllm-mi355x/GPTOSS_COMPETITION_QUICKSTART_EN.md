@@ -3,6 +3,7 @@
 ## 📑 Table of Contents
 
 - [Objective](#objective)
+- [📌 Important Notice](#-important-notice)
 - [Core Files](#core-files)
 - [Quick Start (5 Steps)](#quick-start-5-steps)
   - [1️⃣ Prepare Working Directory (on Host Machine)](#1️⃣-prepare-working-directory-on-host-machine)
@@ -26,7 +27,22 @@
 
 ## Objective
 
-Optimize vLLM inference performance for GPT-OSS 120B FP4 model on AMD MI355X GPUs while maintaining model accuracy.
+Optimize vLLM inference performance for GPT-OSS 120B FP4 model on AMD MI355X GPUs while maintaining model accuracy. **Only the ISL=8192, OSL=1024 (8k/1k long-context) case is benchmarked**, with CONC = 8, 32, 128.
+
+## 📌 Important Notice
+
+- **Single benchmark case**: Only **ISL=8192, OSL=1024 (8k/1k)** is used. Multi-conc mode only accepts `-isl 8192 -osl 1024`.
+- **CONC values**: **8, 32, 128** only (set in `specific_conc_var.sh` for single runs; batch runs test all three).
+- **Something you cannot change**:
+  - model: openai/gpt-oss-120b
+  - TP: 8
+  - ISL: 8192
+  - OSL: 1024
+  - CONC: 8, 32, 128
+  - NUM_PROMPTS: CONC * 10
+  - basline data in dsr1_benchmark.cpp
+  - others, if you're not sure, let's actively talk on discord
+- **Unallowed optimization methods**: optimization that will benefit all chips (e.g. core algorithms and scheduler), optimization that obviously won't be accepted by vLLM (e.g. new enhanced coupling AMD-specific dependencies with no downgrade options).And pls check VLLM contribution guide for basic infos. When you're not sure, let's actively talk on discord.
 
 ## Model Specifics
 - **Model**: `openai/gpt-oss-120b` (FP4 quantized)
@@ -158,11 +174,11 @@ python3 setup.py develop
 Development Phase (Rapid Iteration)
   ↓
 1. Single Config Test & Submit (Approach 1)
-   - Use submit mode to test single CONC config (~15-20 mins)
+   - Use submit mode to test single CONC (~15-20 mins), ISL=8192, OSL=1024
    - Auto-submit to Leaderboard, view ranking in real-time
   ↓
 2. Multi-Concurrency Batch Test & Submit (Approach 2)
-   - Use submit mode to test all CONC configs(~1-2 hours/ISL-OSL)
+   - Use submit mode: `submit "Team" -isl 8192 -osl 1024` to test CONC=8,32,128 (~1–1.5 hours)
    - Auto-submit all results
   ↓
 Done! View Leaderboard rankings in real-time 🎉
@@ -214,9 +230,9 @@ source specific_conc_var.sh
 
 #### Approach 2: Multi-Concurrency Batch Testing (Test All CONC with One Command) 🚀
 
-**Use Case**: Batch test all CONC values and submit to Leaderboard
+**Use Case**: Batch test CONC = 8, 32, 128 for the **only supported case ISL=8192, OSL=1024 (8k/1k)** and submit to Leaderboard
 
-**Only 3 commands to auto-test all configurations and submit! ⭐**
+**One command to auto-test all 3 CONC values and submit! ⭐**
 
 ```bash
 cd /workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x
@@ -233,31 +249,14 @@ bash launch_vllm_server.sh
 docker exec -ti vllm-dev bash
 source all_conc_var.sh
 
-# 4.
-# Submit all results for ISL=1024, OSL=1024 (auto-run CONC=4,8,16,32,64,256, ~2 hours)
-./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 1024
-
-# Submit all results for ISL=1024, OSL=8192 (auto-run CONC=4,8,16,32,64,256, ~2 hours)
-./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 8192
-
-# Submit all results for ISL=8192, OSL=1024 (auto-run CONC=4,8,16,32,64,256, ~2 hours)
+# 4. Submit all results for ISL=8192, OSL=1024 (auto-run CONC=8,32,128, ~1–1.5 hours)
 ./gptoss_benchmark submit "YourTeam" -isl 8192 -osl 1024
 
 # ========== Optional: Test without submitting, use perf mode ========== 
-
-# Test ISL=1024, OSL=1024 (no submit, ~2 hours)
-./gptoss_benchmark perf -isl 1024 -osl 1024
-
-# Test ISL=1024, OSL=8192 (no submit, ~2 hours)
-./gptoss_benchmark perf -isl 1024 -osl 8192
-
-# Test ISL=8192, OSL=1024 (no submit, ~2 hours)
 ./gptoss_benchmark perf -isl 8192 -osl 1024
 ```
 
-**Results auto-submit to corresponding Leaderboards**:
-- ISL=1024, OSL=1024 → https://daniehua-gptoss-fp4-vllm-isl1024osl1024.hf.space
-- ISL=1024, OSL=8192 → https://daniehua-gptoss-fp4-vllm-isl1024osl8192.hf.space
+**Results auto-submit to Leaderboard**:
 - ISL=8192, OSL=1024 → https://daniehua-gptoss-fp4-vllm-isl8192osl1024.hf.space
 
 **Submission Content**: Each CONC configuration submits independently, including:
@@ -265,29 +264,28 @@ source all_conc_var.sh
 - **MI355X vs baseline Direct Comparison**: E2E, throughput, performance ratios
 - Accuracy metric: `gsm8k_metric`, see [this reference](https://github.com/ROCm/ATOM/blob/main/.github/workflows/atom-test.yaml#L141)
 
-**CONC Range Explanation**:
-- All ISL-OSL combinations: CONC=4,8,16,32,64,256 (6 configs each)
+**CONC values**: 8, 32, 128 only (3 configs)
 
 ## Test Mode Comparison
 
 | Mode | Command Example | What Runs | Time (Single Config)| Use Case |
 |------|---------|---------|-------------|---------|
-| **submit** ⭐ | `./gptoss_benchmark submit "Team"` | Accuracy + Performance + Submit | ~15-20 mins | **Recommended: All-in-one, view ranking real-time** |
-| **submit -isl -osl** ⭐ | `./gptoss_benchmark submit "Team" -isl 1024 -osl 1024` | Auto-test 6 CONC + Submit | ~2 hours | **Recommended: Batch test and submit** |
+| **submit** ⭐ | `./gptoss_benchmark submit "Team"` | Accuracy + Performance + Submit (ISL=8192, OSL=1024) | ~15-20 mins | **Recommended: All-in-one, view ranking real-time** |
+| **submit -isl -osl** ⭐ | `./gptoss_benchmark submit "Team" -isl 8192 -osl 1024` | Auto-test CONC=8,32,128 + Submit | ~1–1.5 hours | **Recommended: Batch test and submit** |
 | **acc** | `./gptoss_benchmark acc` | Accuracy test only | ~5-10 mins | Optional: Quick accuracy validation |
 | **perf** | `./gptoss_benchmark perf` | Accuracy + Performance (no submit) | ~15-20 mins | Optional: Test performance without submitting |
-| **perf -isl -osl** | `./gptoss_benchmark perf -isl 1024 -osl 1024` | Auto-test 6 CONC (no submit) | ~2 hours | Optional: Batch test without submitting |
+| **perf -isl -osl** | `./gptoss_benchmark perf -isl 8192 -osl 1024` | Auto-test CONC=8,32,128 (no submit) | ~1–1.5 hours | Optional: Batch test without submitting |
 
 ## Two Testing Approaches Comparison
 
 | Approach | Recommended Command | Configs | Time Estimate | Recommended Scenario |
 |------|---------|-------|---------|---------|
-| **Approach 1: Single Config** ⭐ | `./gptoss_benchmark submit "Team"` | 1 | ~15-20 mins | **Development phase rapid iteration** |
-| **Approach 2: Multi-Concurrency** ⭐ | `./gptoss_benchmark submit "Team" -isl 1024 -osl 1024` | 6 | ~2 hours | **Batch test all CONC** |
+| **Approach 1: Single Config** ⭐ | `./gptoss_benchmark submit "Team"` | 1 (8k/1k, CONC from env) | ~15-20 mins | **Development phase rapid iteration** |
+| **Approach 2: Multi-Concurrency** ⭐ | `./gptoss_benchmark submit "Team" -isl 8192 -osl 1024` | 3 (CONC=8,32,128) | ~1–1.5 hours | **Batch test all CONC** |
 
 **Recommended Workflow** 🎯:
 1. **Development Phase**: Use **Approach 1** (single config + submit) for rapid iteration, view Leaderboard real-time
-2. **Batch Submission**: Use **Approach 2** (multi-conc + submit) to test and submit all configurations at once
+2. **Batch Submission**: Use **Approach 2** (multi-conc + submit) to test CONC=8,32,128 and submit
 
 **Why use submit directly?**
 - ✅ submit = accuracy test + performance test + auto-submit (all-in-one)
@@ -376,75 +374,59 @@ bash launch_vllm_server.sh
 docker exec -ti vllm-dev bash
 source specific_conc_var.sh
 
-# Submit all results for ISL=1024, OSL=1024 (auto-test CONC=4,8,16,32,64,256, ~2 hours)
-./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 1024
-
-# Submit all results for ISL=1024, OSL=8192 (auto-test CONC=4,8,16,32,64,256, ~2 hours)
-./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 8192
-
-# Submit all results for ISL=8192, OSL=1024 (auto-test CONC=4,8,16,32,64,256, ~2 hours)
+# Only supported case: ISL=8192, OSL=1024 (CONC=8,32,128)
 ./gptoss_benchmark submit "YourTeam" -isl 8192 -osl 1024
 ```
 
 **Each command will automatically**:
-- ✅ Test corresponding CONC values (1024-1024 and 1024-8192: 3 each, 8192-1024: 2)
+- ✅ Test 3 CONC values (8, 32, 128)
 - ✅ Run accuracy + performance tests
-- ✅ Auto-submit to corresponding ISL-OSL Leaderboard
+- ✅ Auto-submit to Leaderboard
 - ✅ Save all results to independent directory
 - ✅ Generate summary report
 
-**Leaderboard Auto-Routing**:
-- `ISL=1024, OSL=1024` → https://daniehua-gptoss-fp4-vllm-isl1024osl1024.hf.space
-- `ISL=1024, OSL=8192` → https://daniehua-gptoss-fp4-vllm-isl1024osl8192.hf.space
-- `ISL=8192, OSL=1024` → https://daniehua-gptoss-fp4-vllm-isl8192osl1024.hf.space
+**Leaderboard**: ISL=8192, OSL=1024 → https://daniehua-gptoss-fp4-vllm-isl8192osl1024.hf.space
 
 **Result Output Example**:
 ```
 ============================================
 Multi-Concurrency Testing Mode
 ============================================
-ISL: 1024
+ISL: 8192
 OSL: 1024
 Mode: submit
-CONC values: 4, 8, 16
+CONC values: 8, 32, 128
 Team: YourTeam
-Leaderboard: https://daniehua-gptoss-fp4-vllm-isl1024osl1024.hf.space
+Leaderboard: https://daniehua-gptoss-fp4-vllm-isl8192osl1024.hf.space
 ============================================
 
-Results directory: batch_isl1024_osl1024_20251127_150000
-
-============================================
-Testing CONC=4
-============================================
-... (running tests) ...
-✓ CONC=4: PASSED (180s)
+Results directory: batch_isl8192_osl1024_20251127_150000
 
 ============================================
 Testing CONC=8
 ============================================
-... (continue testing other CONC values) ...
-
+... (running tests) ...
+✓ CONC=8: PASSED (180s)
+...
 ============================================
 Multi-Concurrency Test Complete!
 ============================================
-Total tests: 6
-Passed: 6
+Total tests: 3
+Passed: 3
 Failed: 0
-
-Results saved in: batch_isl1024_osl1024_20251127_150000/
 ============================================
 ```
 
 **Development Phase Quick Validation**:
 ```bash
 # Recommended: Test and submit directly (all-in-one) ⭐
-./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 1024
+./gptoss_benchmark submit "YourTeam"
 
 # Optional: Accuracy test only (quick validation)
-./gptoss_benchmark acc -isl 1024 -osl 1024
+./gptoss_benchmark acc
 
 # Optional: Full test without submitting
-./gptoss_benchmark perf -isl 1024 -osl 1024
+./gptoss_benchmark perf
 ```
 
 ## FAQ
@@ -503,8 +485,8 @@ Use single configuration mode:
 ```bash
 cd /workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x
 
-# 1. Edit specific_conc_var.sh to modify CONC value
-vim specific_conc_var.sh  # Modify CONC=16
+# 1. Edit specific_conc_var.sh to modify CONC value (8, 32, or 128)
+vim specific_conc_var.sh  # e.g. CONC=32
 
 # 2. Load environment variables
 source specific_conc_var.sh
@@ -517,8 +499,8 @@ Or set manually:
 ```bash
 cd /workspace/amdgpu_bounty_optimization/gptoss-fp4-vllm-mi355x
 source specific_conc_var.sh
-export CONC=16  # Override default, test CONC=16 only
-export NUM_PROMPTS=160  # GPT-OSS: CONC * 10
+export CONC=32  # Override default; use 8, 32, or 128
+export NUM_PROMPTS=$((CONC * 10))  # GPT-OSS: CONC * 10
 
 # Recommended: Submit directly
 ./gptoss_benchmark submit "YourTeam"
@@ -535,17 +517,14 @@ export NUM_PROMPTS=160  # GPT-OSS: CONC * 10
 - **perf mode**: ~15-20 mins (Optional: Test without submitting)
 
 **Multi-Concurrency Test (per ISL-OSL combination)**:
-**Multi-Concurrency Test (per ISL-OSL combination, 6 CONC values)**:
-- **All ISL-OSL combinations (6 CONC each)**: ~15-20 mins/CONC × 6 = **~2 hours** ⭐
-
-**All 3 ISL-OSL Combinations** (18 configurations):
-- **submit mode**: ~2 hours × 3 = **~6 hours** ⭐
+**Multi-Concurrency Test** (CONC=8,32,128 only):
+- **submit -isl 8192 -osl 1024**: ~15-20 mins/CONC × 3 = **~1–1.5 hours** ⭐ **Recommended**
+- **perf -isl 8192 -osl 1024**: **~1–1.5 hours** (Optional)
 
 **Recommended Workflow** 🎯:
 1. **Development Phase**: Single config `submit "YourTeam"` rapid iteration (~15-20 mins/time)
    - See Leaderboard ranking immediately, quickly validate optimization effects
-2. **Batch Submission**: Multi-conc `submit "YourTeam" -isl -osl` submit all configs (~2 hours/combination)
-   - Complete testing and submission at once, can run overnight
+2. **Batch Submission**: `submit "YourTeam" -isl 8192 -osl 1024` to test CONC=8,32,128 and submit (~1–1.5 hours)
 
 💡 **Why use submit directly?**
 - ✅ All-in-one, no need to run perf then submit
@@ -561,7 +540,7 @@ export NUM_PROMPTS=160  # GPT-OSS: CONC * 10
 | Model Size | 120B | ~670B |
 | Architecture | MoE (Mixture of Experts) | Dense |
 | Framework | vLLM | SGLang |
-| CONC Range | 4-16 (8192-1024: 4-8) | 4-64 |
+| CONC Range | 8, 32, 128 (8k/1k only) | 4-64 |
 | NUM_PROMPTS | CONC × 10 | CONC × 50 (1024-1024/8192-1024) / CONC × 20 (1024-8192) |
 | Optimization Focus | MoE kernel, vLLM scheduling | Long context, chunked prefill |
 
@@ -588,16 +567,13 @@ Round 3: AMD GPU Kernel Optimization
   ├─ Optimize MoE kernel (Critical!)
   └─ Real-time comparison: ./gptoss_benchmark submit "YourTeam", view Leaderboard
 
-Round 4: System Optimization
+Round 4: System Optimization(note: please be careful if that will benefit all the chips or if that will be accepted by SGLang, see important notice on top)
   ├─ Async scheduling
   ├─ Block manager
   └─ End-to-end tuning, submit for validation after each optimization
 
 Round 5: Batch Submission
-  ├─ Test all ISL-OSL combinations
-  ├─ ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 1024
-  ├─ ./gptoss_benchmark submit "YourTeam" -isl 1024 -osl 8192
-  └─ ./gptoss_benchmark submit "YourTeam" -isl 8192 -osl 1024
+  └─ ./gptoss_benchmark submit "YourTeam" -isl 8192 -osl 1024   # CONC=8,32,128
 ```
 
 **Key Advantage**: Submit directly after each optimization, view Leaderboard ranking real-time, rapid iteration!
@@ -606,10 +582,7 @@ Round 5: Batch Submission
 
 - 🔧 [vLLM GitHub](https://github.com/vllm-project/vllm) - Inference framework
 - 🔧 [AITER GitHub](https://github.com/ROCm/aiter) - AMD GPU operator library
-- 📊 Leaderboards:
-  - [ISL=1024, OSL=1024](https://daniehua-gptoss-fp4-vllm-isl1024osl1024.hf.space)
-  - [ISL=1024, OSL=8192](https://daniehua-gptoss-fp4-vllm-isl1024osl8192.hf.space)
-  - [ISL=8192, OSL=1024](https://daniehua-gptoss-fp4-vllm-isl8192osl1024.hf.space)
+- 📊 Leaderboard (only 8k/1k): [ISL=8192, OSL=1024](https://daniehua-gptoss-fp4-vllm-isl8192osl1024.hf.space)
 
 
 **Good luck! 🚀**
