@@ -17,8 +17,8 @@
 # ============================================
 
 export MODEL="openai/gpt-oss-120b"
-export PORT=8888
-export TP=8
+export PORT=8878
+export TP=1
 
 # Atom-specific
 export EP_SIZE=1

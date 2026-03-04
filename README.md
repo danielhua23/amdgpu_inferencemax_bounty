@@ -145,7 +145,7 @@ Ranking is determined by:
 
 | Prize | Amount |
 |-------|--------|
-| **Grand Prize** | $1,000,000 total ($500,000 per track) |
+| **Grand Prize** | $1,000,000 total ($650,000 for deepseek track, $350,000 for gptoss track) |
 | **First Place** | $60,000 total ($30,000 per track) |
 | **Second Place** | $40,000 total ($20,000 per track) |
 
@@ -168,7 +168,7 @@ Ranking is determined by:
 
 ### Test Configurations
 
-**Only the following configuration is benchmarked** for all four tracks above:
+**Only the following configuration is benchmarked**:
 
 | ISL | OSL | Description | CONC |
 |-----|-----|-------------|------|

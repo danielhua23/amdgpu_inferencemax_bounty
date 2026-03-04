@@ -56,7 +56,7 @@ git clone --recursive https://github.com/ROCm/aiter.git
 
 ### 2. Launch container (Atom image)
 
-Use the ROCm Pytorch image:
+Use the Atom image to quickstart:
 
 ```bash
 docker run -it \
@@ -69,16 +69,15 @@ docker run -it \
   -v ~/competition/aiter:/workspace/aiter \
   -v ~/competition/ATOM:/workspace/ATOM \
   -e HF_TOKEN=your_huggingface_token_here \
-  rocm/pytorch:rocm7.0.2_ubuntu24.04_py3.12_pytorch_release_2.8.0 \
+  rocm/atom:rocm7.1.1-ubuntu24.04-pytorch2.9-atom0.1.1-MI350x \
   /bin/bash
 ```
-> Note: rocm/atom:rocm7.1.1-ubuntu24.04-pytorch2.9-atom0.1.1-MI350x is a image with pre-built ATOM which is at /app
+You can develop at `/app/ATOM` and `/app/aiter-test`, after launch container, we jump to **4. Compile benchmark binary**.
 
 Adjust `/nfsdata/hf_hub_cache-1/` and `HF_TOKEN` as needed.
 
-### 3. Install Latest Editable ATOM in Container
-
-> refer to https://github.com/ROCm/ATOM
+### 3. (Optional) Install Latest Editable ATOM in Container
+**Note:** if you are not using above ATOM image but referring the installing steps from https://github.com/ROCm/ATOM using rocm/pytorch:rocm7.0.2_ubuntu24.04_py3.12_pytorch_release_2.8.0 for installing, you can refer this step to install latest editable ATOM in container
 
 ```bash
 # Install AITER
@@ -109,7 +108,7 @@ python -c "import atom; print(atom.__file__)"
 ```
 > Note: I won't say you 100% get atom successfully compiled since aiter is the dependency of atom, and both atom and aiter are fast-iterated projects, they are changing in the fly. So you may encounter some issues. But I would say they work for me at 33e0aac6d7f5f2e505bcfe18a22d68110bfb3331 for atom and cbbdc5066d3ab0f25f022bb5d79cccc8465b7d1c for aiter
 
-### 4. Compile benchmark binary (if needed)
+### 4. Compile benchmark binary
 
 If `gptoss_benchmark` is not provided as a binary:
 
