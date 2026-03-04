@@ -30,10 +30,10 @@ export MAX_MODEL_LEN=16384
 # Testing Configuration - Single Configuration
 # ============================================
 
-# Only 8k/1k is benchmarked; CONC = 8, 32, or 128
+# Only 8k/1k is benchmarked; CONC = 4, 32, or 128
 export ISL=8192
 export OSL=1024
-export CONC=8
+export CONC=4
 
 # Random Range Ratio
 export RANDOM_RANGE_RATIO=1.0

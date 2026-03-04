@@ -1,14 +1,11 @@
 // ============================================
-// Benchmark Script - Multi-Concurrency Mode (C++ Version)
+// Benchmark Script - GPT-OSS FP4 on Atom, Multi-Concurrency Mode (C++ Version)
 // ============================================
-// Compile with:
-//   g++ -std=c++17 -o dsr1_benchmark dsr1_benchmark.cpp -lcurl -pthread -O2
-//
-// Usage:
-//   ./dsr1_benchmark acc                                    # Run accuracy test only (ISL=8192, OSL=1024)
-//   ./dsr1_benchmark perf                                   # Run accuracy + performance tests
-//   ./dsr1_benchmark submit <team>                         # Run all tests + submit to leaderboard
-//   ./dsr1_benchmark submit <team> -isl 8192 -osl 1024     # Batch test CONC=8,32,128 + submit (only supported case)
+// Backend: Atom (OpenAI-compatible server). Usage:
+//   ./gptoss_benchmark acc                                    # Run accuracy test only
+//   ./gptoss_benchmark perf                                   # Run accuracy + performance tests
+//   ./gptoss_benchmark submit <team>                         # Run all tests + submit to leaderboard
+//   ./gptoss_benchmark submit <team> -isl 8192 -osl 1024     # Batch test CONC=4,32,128 + submit (only supported case)
 
 #include <iostream>
 #include <string>
@@ -28,9 +25,6 @@
 #include <ctime>
 #include <libgen.h>
 #include <limits.h>
-
-// For JSON parsing (using simple inline implementation to avoid external dependencies)
-// In production, you would use nlohmann/json or similar
 #include <cmath>
 
 using namespace std;
@@ -48,9 +42,10 @@ struct Config {
     string model;
     int port = 8888;
     int tp = 8;
-    int conc = 8;
+    int conc = 4;
     int isl = 8192;
     int osl = 1024;
+    int max_model_len = 16384;  // GPT-OSS specific
     double random_range_ratio = 1.0;
     string result_filename = "result";
     int num_prompts = 0;
@@ -62,7 +57,7 @@ struct Config {
 };
 
 // ============================================
-// Baseline Data Structure
+// Baseline Data Structure (GPT-OSS)
 // ============================================
 struct Baseline {
     double median_e2e;
@@ -70,11 +65,11 @@ struct Baseline {
     double tput_per_gpu;
 };
 
-// Only ISL=8192, OSL=1024 (8k/1k) is benchmarked; CONC = 8, 32, 128
+// Only ISL=8192, OSL=1024 (8k/1k) is benchmarked; CONC = 4, 32, 128
 map<string, Baseline> BASELINES = {
-    {"8192_1024_8", {9709, 98.081, 838.031}},
-    {"8192_1024_32", {18146, 51.698, 1776.218}},
-    {"8192_1024_128", {32144, 38.07, 4009.706}},  // placeholder; update with real baseline when available
+    {"8192_1024_4", {2792, 342.70, 2892.223}},
+    {"8192_1024_32", {2792, 342.70, 2892.223}},  // placeholder; update with real baseline when available
+    {"8192_1024_128", {2792, 342.70, 2892.223}}, // placeholder; update with real baseline when available
 };
 
 // ============================================
@@ -172,19 +167,15 @@ string extract_regex_match(const string& text, const regex& pattern, int group =
 
 string get_leaderboard_url(const string& isl, const string& osl) {
     string key = isl + "_" + osl;
-    if (key == "1024_1024") {
-        return "https://daniehua-dsr1-fp4-sgl-isl1024osl1024.hf.space";
-    } else if (key == "1024_8192") {
-        return "https://daniehua-dsr1-fp4-sgl-isl1024osl8192.hf.space";
-    } else if (key == "8192_1024") {
-        return "https://daniehua-dsr1-fp4-sgl-isl8192osl1024.hf.space";
+    if (key == "8192_1024") {
+        return "https://daniehua-gptoss-fp4-isl8192osl1024.hf.space";
     } else {
         return "ERROR: wrong isl and osl config, pls check";
     }
 }
 
 // ============================================
-// Simple JSON Parser (minimal implementation)
+// Simple JSON Parser
 // ============================================
 class SimpleJSON {
 private:
@@ -192,7 +183,6 @@ private:
     
 public:
     void parse_simple_json(const string& json) {
-        // Very simple parser - only handles flat key-value pairs
         regex pattern("\"([^\"]+)\"\\s*:\\s*([0-9.]+|\"[^\"]*\"|null)");
         smatch match;
         string::const_iterator searchStart(json.cbegin());
@@ -221,7 +211,6 @@ public:
     string get_string(const string& key, const string& default_val = "") {
         if (data.find(key) != data.end()) {
             string val = data[key];
-            // Remove quotes if present
             if (val.size() >= 2 && val.front() == '"' && val.back() == '"') {
                 return val.substr(1, val.size() - 2);
             }
@@ -237,7 +226,6 @@ public:
 int run_benchmark_serving(const Config& cfg) {
     cout << "INFO: Starting performance benchmark..." << endl;
     
-    // Clone benchmark serving repo
     string bench_dir = "/tmp/bmk-" + to_string(time(nullptr));
     string clone_cmd = "git clone https://github.com/kimbochen/bench_serving.git " + bench_dir;
     if (execute_command(clone_cmd) != 0) {
@@ -245,7 +233,6 @@ int run_benchmark_serving(const Config& cfg) {
         return 1;
     }
     
-    // Build python command
     stringstream cmd;
     cmd << "python3 " << bench_dir << "/benchmark_serving.py"
         << " --model \"" << cfg.model << "\""
@@ -266,33 +253,56 @@ int run_benchmark_serving(const Config& cfg) {
         << " --result-filename " << cfg.result_filename << ".json";
     
     int ret = execute_command(cmd.str());
-    
-    // Cleanup temp directory
     execute_command("rm -rf " + bench_dir, nullptr, false);
     
     return ret;
 }
 
 // ============================================
+// Server Health Check
+// ============================================
+bool check_server_health(const Config& cfg, int max_retries = 5, int delay_seconds = 3) {
+    cout << "INFO: Checking server health at http://0.0.0.0:" << cfg.port << endl;
+    
+    for (int attempt = 1; attempt <= max_retries; attempt++) {
+        stringstream cmd;
+        cmd << "curl -s -o /dev/null -w '%{http_code}' "
+            << "http://0.0.0.0:" << cfg.port << "/health 2>/dev/null";
+        
+        string output;
+        int ret = execute_command(cmd.str(), &output, false);
+        
+        // Remove whitespace
+        output.erase(remove_if(output.begin(), output.end(), ::isspace), output.end());
+        
+        if (output == "200" || output.find("200") != string::npos) {
+            cout << "SUCCESS: Server is healthy and responding" << endl;
+            return true;
+        }
+        
+        cout << "WARNING: Server health check failed (attempt " << attempt << "/" << max_retries 
+             << "), response: " << output << endl;
+        
+        if (attempt < max_retries) {
+            cout << "INFO: Waiting " << delay_seconds << " seconds before retry..." << endl;
+            sleep(delay_seconds);
+        }
+    }
+    
+    cerr << "ERROR: Server health check failed after " << max_retries << " attempts" << endl;
+    cerr << "ERROR: Please ensure Atom server is running on port " << cfg.port << endl;
+    return false;
+}
+
+// ============================================
 // Run Accuracy Test
 // ============================================
 struct AccuracyMetrics {
+    // GSM8K metric from lm-eval output.
     double gsm8k_metric = 0.0;
+    // Backward compatibility: downstream logic still reads gpqa_metric.
+    double gpqa_metric = 0.0;
 };
-
-bool check_server_health(const Config& cfg) {
-    stringstream cmd;
-    cmd << "curl -sS -o /dev/null -w \"%{http_code}\" "
-        << "http://0.0.0.0:" << cfg.port << "/v1/models";
-    string output;
-    int ret = execute_command(cmd.str(), &output, false);
-    if (ret != 0) {
-        return false;
-    }
-    string code = output;
-    code.erase(remove_if(code.begin(), code.end(), ::isspace), code.end());
-    return code == "200";
-}
 
 int run_accuracy_test_gsm8k(const Config& cfg, AccuracyMetrics& metrics) {
     cout << "INFO: Starting accuracy test (GSM8K via lm-eval)" << endl;
@@ -393,6 +403,7 @@ int run_accuracy_test_gsm8k(const Config& cfg, AccuracyMetrics& metrics) {
     }
 
     metrics.gsm8k_metric = parsed_metric;
+    metrics.gpqa_metric = parsed_metric;
     
     cout << "INFO: Accuracy metrics:" << endl;
     cout << "  GSM8K metric: " << metrics.gsm8k_metric << endl;
@@ -400,25 +411,24 @@ int run_accuracy_test_gsm8k(const Config& cfg, AccuracyMetrics& metrics) {
     return 0;
 }
 
-// 修复函数名不一致问题
 int run_accuracy_test(const Config& cfg, AccuracyMetrics& metrics) {
     return run_accuracy_test_gsm8k(cfg, metrics);
 }
 
 // ============================================
-// Validate Accuracy Metrics
+// Validate Accuracy Metrics (GSM8K Baseline)
 // ============================================
 int validate_accuracy(const AccuracyMetrics& metrics) {
     // Override via environment variables if you need a different threshold.
-    const double BASELINE_GSM8K_METRIC = stod(get_env_var("GSM8K_BASELINE_METRIC", "0.93"));
+    const double BASELINE_GSM8K_METRIC = stod(get_env_var("GSM8K_BASELINE_METRIC", "0.38"));
     const double GSM8K_TOL = stod(get_env_var("GSM8K_TOL", "0.0"));  // absolute tolerance
     const double MIN_ACCEPTED = BASELINE_GSM8K_METRIC - GSM8K_TOL;
-
+    
     cout << "\nINFO: Validating GSM8K metric against baseline..." << endl;
     cout << "  Baseline gsm8k_metric=" << BASELINE_GSM8K_METRIC << endl;
     cout << "  Tolerance (absolute): " << GSM8K_TOL << endl;
     cout << "  Minimum accepted: " << MIN_ACCEPTED << endl;
-
+    
     if (metrics.gsm8k_metric < MIN_ACCEPTED) {
         cout << "\nERROR: Accuracy validation FAILED!" << endl;
         cout << "ERROR: gsm8k_metric too low: " << metrics.gsm8k_metric
@@ -429,7 +439,7 @@ int validate_accuracy(const AccuracyMetrics& metrics) {
     }
     
     cout << "\nSUCCESS: Accuracy validation PASSED!" << endl;
-    cout << "✓ gsm8k_metric: " << metrics.gsm8k_metric << " >= " << MIN_ACCEPTED << endl;
+    cout << "✓ gsm8k_metric: " << metrics.gsm8k_metric << " ≥ " << MIN_ACCEPTED << endl;
     cout << endl;
     return 0;
 }
@@ -447,16 +457,15 @@ int process_result_json(const Config& cfg, const AccuracyMetrics& acc_metrics) {
     
     cout << "INFO: Cleaning up and adding metrics to " << result_file << endl;
     
-    // Create Python script to process JSON
     string python_script = R"(
 import json
 import sys
 
-# Baseline Data (1126) - only ISL=8192, OSL=1024 (8k/1k), CONC=8,32,128
+# Baseline Data (NV-1126) - GPT-OSS; only ISL=8192, OSL=1024 (8k/1k), CONC=4,32,128
 BASELINES = {
-    ('8192', '1024', '8'): {'median_e2e': 9709, 'median_intvty': 98.081,'tput_per_gpu': 838.031},
-    ('8192', '1024', '32'): {'median_e2e': 18146, 'median_intvty': 51.698,'tput_per_gpu': 1776.218},
-    ('8192', '1024', '128'): {'median_e2e': 32144, 'median_intvty': 38.07,'tput_per_gpu': 4009.706},
+    ('8192', '1024', '4'): {'median_e2e': 2792, 'median_intvty': 342.70,'tput_per_gpu': 2892.223},
+    ('8192', '1024', '32'): {'median_e2e': 2792, 'median_intvty': 342.70,'tput_per_gpu': 2892.223},
+    ('8192', '1024', '128'): {'median_e2e': 2792, 'median_intvty': 342.70,'tput_per_gpu': 2892.223},
 }
 
 result_file = sys.argv[1]
@@ -467,13 +476,15 @@ model = sys.argv[5]
 port = sys.argv[6]
 random_range_ratio = sys.argv[7]
 num_prompts = sys.argv[8]
+import os
 gsm8k_metric = float(sys.argv[9])
+baseline_gsm8k_metric = float(os.environ.get('GSM8K_BASELINE_METRIC', '0.58'))
+gsm8k_tol = float(os.environ.get('GSM8K_TOL', '0.05'))
 
 try:
     with open(result_file, 'r') as f:
         data = json.load(f)
     
-    # Extract only the summary statistics
     summary_data = {}
     
     keep_fields = [
@@ -488,16 +499,14 @@ try:
         if field in data:
             summary_data[field] = data[field]
     
-    # Add benchmark_args
     summary_data['benchmark_args'] = {
-        'model': model, 'backend': 'vllm', 'base_url': f'http://0.0.0.0:{port}',
+        'model': model, 'backend': 'atom', 'base_url': f'http://0.0.0.0:{port}',
         'dataset_name': 'random', 'random_input_len': int(isl),
         'random_output_len': int(osl), 'random_range_ratio': float(random_range_ratio),
         'num_prompts': int(num_prompts), 'max_concurrency': int(conc),
         'request_rate': 'inf'
     }
     
-    # Add tput_per_gpu
     mi355x_tput_per_gpu = 0.0
     mi355x_median_e2e = 0.0
     
@@ -508,13 +517,11 @@ try:
     if 'median_e2el_ms' in data:
         mi355x_median_e2e = data['median_e2el_ms']
     
-    # Add interactivity
     if 'median_tpot_ms' in data and data['median_tpot_ms'] > 0:
         summary_data['interactivity'] = 1000.0 / data['median_tpot_ms']
     else:
         summary_data['interactivity'] = 0.0
     
-    # Add baseline and compute ratios
     baseline_key = (isl, osl, conc)
     if baseline_key in BASELINES:
         baseline_data = BASELINES[baseline_key]
@@ -539,7 +546,7 @@ try:
         else:
             summary_data['interactivity_ratio_vs_baseline_1126'] = 0.0
         
-        print(f'INFO: baseline found for ISL={isl}, OSL={osl}, CONC={conc}')
+        print(f'INFO: Baseline found for ISL={isl}, OSL={osl}, CONC={conc}')
         print(f'INFO: Throughput ratio (MI355X/baseline, higher is better!): {summary_data["tput_per_gpu_ratio_vs_baseline_1126"]:.4f}')
         print(f'INFO: E2E latency ratio (MI355X/baseline, lower is better!): {summary_data["median_e2e_ratio_vs_baseline_1126"]:.4f}')
         print(f'INFO: Interactivity: {summary_data["interactivity"]:.2f} tokens/s/user')
@@ -551,21 +558,18 @@ try:
         summary_data['median_e2e_ratio_vs_baseline_1126'] = None
         summary_data['interactivity_ratio_vs_baseline_1126'] = None
     
-    # Add accuracy metrics
     summary_data['accuracy'] = {
-        'task': 'gsm8k',
         'gsm8k_metric': gsm8k_metric,
     }
     
-    # Add accuracy validation info
     summary_data['accuracy_validation'] = {
         'status': 'PASSED',
-        'baseline_gsm8k_metric': float(sys.argv[10]),
-        'gsm8k_tol': float(sys.argv[11]),
-        'minimum_accepted': float(sys.argv[12])
+        'baselines': {
+            'gsm8k_metric': baseline_gsm8k_metric,
+        },
+        'tolerance': gsm8k_tol
     }
     
-    # Write cleaned data back
     with open(result_file, 'w') as f:
         json.dump(summary_data, f, indent=2)
     
@@ -577,13 +581,11 @@ except Exception as e:
     sys.exit(1)
 )";
     
-    // Write Python script to temp file
     string script_path = "/tmp/process_json_" + to_string(time(nullptr)) + ".py";
     ofstream script_file(script_path);
     script_file << python_script;
     script_file.close();
     
-    // Execute Python script
     stringstream cmd;
     cmd << "python3 " << script_path
         << " " << result_file
@@ -594,14 +596,9 @@ except Exception as e:
         << " " << cfg.port
         << " " << cfg.random_range_ratio
         << " " << cfg.num_prompts
-        << " " << acc_metrics.gsm8k_metric
-        << " " << stod(get_env_var("GSM8K_BASELINE_METRIC", "0.38"))
-        << " " << stod(get_env_var("GSM8K_TOL", "0.0"))
-        << " " << (stod(get_env_var("GSM8K_BASELINE_METRIC", "0.38")) - stod(get_env_var("GSM8K_TOL", "0.0")));
+        << " " << acc_metrics.gsm8k_metric;
     
     int ret = execute_command(cmd.str());
-    
-    // Cleanup
     remove(script_path.c_str());
     
     return ret;
@@ -625,7 +622,6 @@ int submit_to_leaderboard(const Config& cfg, const string& lb_url) {
         return 1;
     }
     
-    // Parse metrics using Python
     string python_parse_script = R"(
 import json
 import sys
@@ -687,7 +683,6 @@ except Exception as e:
     
     remove(parse_script_path.c_str());
     
-    // Parse CSV output
     stringstream ss(metrics_output);
     vector<string> values;
     string token;
@@ -711,7 +706,6 @@ except Exception as e:
     double interactivity_ratio = stod(values[8]);
     double gsm8k_metric = stod(values[9]);
     
-    // Display metrics
     cout << "\nConfiguration:" << endl;
     cout << "  CONC: " << cfg.conc << endl;
     cout << "\nMI355X Performance:" << endl;
@@ -727,9 +721,8 @@ except Exception as e:
     cout << "  Throughput Ratio: " << throughput_ratio << endl;
     cout << "  Interactivity Ratio: " << interactivity_ratio << endl;
     cout << "\nAccuracy metrics:" << endl;
-    cout << "  GSM8K Metric: " << gsm8k_metric << endl;
+    cout << "  GSM8K metric: " << gsm8k_metric << endl;
     
-    // Submit using curl
     cout << "\nSubmitting to leaderboard..." << endl;
     
     stringstream curl_cmd;
@@ -753,18 +746,11 @@ except Exception as e:
     string submit_response;
     execute_command(curl_cmd.str(), &submit_response, false);
     
-    // Extract event ID (simple extraction)
-    regex event_pattern("\"event_id\"\\s*:\\s*\"([^\"]+)\"");
-    string event_id = extract_regex_match(submit_response, event_pattern);
-    
     sleep(2);
     
     cout << "\n============================================" << endl;
     cout << "SUCCESS: Results submitted to leaderboard! 🎉" << endl;
     cout << "Check it out @ " << lb_url << endl;
-    if (!event_id.empty()) {
-        cout << "Event ID: " << event_id << endl;
-    }
     cout << "============================================" << endl;
     
     return 0;
@@ -789,31 +775,27 @@ int run_single_test(Config cfg, const AccuracyMetrics& acc_metrics) {
     }
     cout << "============================================" << endl;
     
-    // Check if we should continue to performance test
     if (cfg.mode == "acc") {
         cout << "\n============================================" << endl;
         cout << "Mode: acc - Accuracy test completed" << endl;
         cout << "============================================" << endl;
         cout << "Accuracy metrics:" << endl;
-        cout << "  GSM8K Metric: " << acc_metrics.gsm8k_metric << endl;
+        cout << "  GSM8K metric: " << acc_metrics.gsm8k_metric << endl;
         cout << "\nSUCCESS: Accuracy test completed successfully!" << endl;
         cout << "Skipping performance benchmark (acc mode)" << endl;
         return 0;
     }
     
-    // Run performance benchmark
     if (run_benchmark_serving(cfg) != 0) {
         cerr << "ERROR: Performance benchmark failed" << endl;
         return 1;
     }
     
-    // Process result JSON
     if (process_result_json(cfg, acc_metrics) != 0) {
         cerr << "ERROR: Failed to process result JSON" << endl;
         return 1;
     }
     
-    // Submit to leaderboard if in submit mode
     if (cfg.mode == "submit") {
         string lb_url;
         if (!cfg.lb_url_override.empty()) {
@@ -833,7 +815,7 @@ int run_single_test(Config cfg, const AccuracyMetrics& acc_metrics) {
 }
 
 // ============================================
-// Run Multi-Concurrency Mode
+// Run Multi-Concurrency Mode (GPT-OSS specific CONC values)
 // ============================================
 int run_multi_conc_mode(Config cfg) {
     cout << "============================================" << endl;
@@ -846,8 +828,7 @@ int run_multi_conc_mode(Config cfg) {
         cerr << "ERROR: Only ISL=8192, OSL=1024 (8k/1k) is supported. Use: -isl 8192 -osl 1024" << endl;
         return 1;
     }
-    cout << "CONC values: 8, 32, 128" << endl;
-    
+    cout << "CONC values: 4, 32, 128" << endl;
     string lb_url;
     if (cfg.mode == "submit") {
         cout << "Team: " << cfg.team_name << endl;
@@ -857,7 +838,6 @@ int run_multi_conc_mode(Config cfg) {
     cout << "============================================" << endl;
     cout << endl;
     
-    // Create results directory
     string batch_results_dir = "batch_isl" + cfg.isl_arg + "_osl" + cfg.osl_arg + "_" + get_timestamp();
     if (!create_directory(batch_results_dir)) {
         cerr << "ERROR: Failed to create results directory" << endl;
@@ -867,12 +847,9 @@ int run_multi_conc_mode(Config cfg) {
     cout << "Results directory: " << batch_results_dir << endl;
     cout << endl;
     
-    // Only 8k/1k: CONC = 8, 32, 128
-    vector<int> conc_values = {8, 32, 128};
     int passed = 0;
     int failed = 0;
     
-    // Create summary file
     string summary_file = batch_results_dir + "/summary.txt";
     ofstream summary(summary_file);
     summary << "Multi-Concurrency Test Results" << endl;
@@ -883,26 +860,25 @@ int run_multi_conc_mode(Config cfg) {
     summary << endl;
     summary.close();
     
-    // Loop through CONC values
+    vector<int> conc_values = {4, 32, 128};
     for (int conc : conc_values) {
         cout << endl;
         cout << "============================================" << endl;
         cout << "Testing CONC=" << conc << endl;
         cout << "============================================" << endl;
         
-        // Calculate NUM_PROMPTS (match InferenceX: CONC * 10)
+        // GPT-OSS: NUM_PROMPTS = CONC * 10
         int num_prompts = conc * 10;
         
-        // Set result filename
         string result_filename = "result_isl" + cfg.isl_arg + "_osl" + cfg.osl_arg + "_conc" + to_string(conc);
         
-        // Set environment variables for recursive call
         set_env_var("MODEL", cfg.model);
         set_env_var("PORT", to_string(cfg.port));
         set_env_var("TP", to_string(cfg.tp));
         set_env_var("ISL", cfg.isl_arg);
         set_env_var("OSL", cfg.osl_arg);
         set_env_var("CONC", to_string(conc));
+        set_env_var("MAX_MODEL_LEN", to_string(cfg.max_model_len));
         set_env_var("RANDOM_RANGE_RATIO", to_string(cfg.random_range_ratio));
         set_env_var("NUM_PROMPTS", to_string(num_prompts));
         set_env_var("RESULT_FILENAME", batch_results_dir + "/" + result_filename);
@@ -911,7 +887,6 @@ int run_multi_conc_mode(Config cfg) {
             set_env_var("LB_URL_OVERRIDE", lb_url);
         }
         
-        // Run single test by calling this binary recursively
         auto start_time = chrono::steady_clock::now();
         
         stringstream recursive_cmd;
@@ -927,7 +902,6 @@ int run_multi_conc_mode(Config cfg) {
         auto end_time = chrono::steady_clock::now();
         auto duration = chrono::duration_cast<chrono::seconds>(end_time - start_time).count();
         
-        // Record result
         ofstream summary_append(summary_file, ios::app);
         if (test_status == 0) {
             passed++;
@@ -942,11 +916,9 @@ int run_multi_conc_mode(Config cfg) {
         }
         summary_append.close();
         
-        // Brief pause between tests
         sleep(2);
     }
     
-    // Final summary
     ofstream summary_final(summary_file, ios::app);
     summary_final << endl;
     summary_final << "============================================" << endl;
@@ -960,7 +932,6 @@ int run_multi_conc_mode(Config cfg) {
     summary_final << "============================================" << endl;
     summary_final.close();
     
-    // Print final summary to console
     ifstream summary_read(summary_file);
     string line;
     bool print = false;
@@ -984,11 +955,9 @@ int run_multi_conc_mode(Config cfg) {
 int main(int argc, char** argv) {
     Config cfg;
     
-    // Get script path
     cfg.script_path = get_executable_path();
     cfg.script_dir = get_executable_dir();
     
-    // Parse command line arguments
     int i = 1;
     while (i < argc) {
         string arg = argv[i];
@@ -1013,7 +982,6 @@ int main(int argc, char** argv) {
                 return 1;
             }
         } else {
-            // Assume it's team name if MODE is submit
             if (cfg.mode == "submit" && cfg.team_name.empty()) {
                 cfg.team_name = arg;
             }
@@ -1021,12 +989,10 @@ int main(int argc, char** argv) {
         }
     }
     
-    // Default mode
     if (cfg.mode.empty()) {
         cfg.mode = "acc";
     }
     
-    // Validate mode
     if (cfg.mode != "acc" && cfg.mode != "perf" && cfg.mode != "submit") {
         cerr << "ERROR: Invalid mode '" << cfg.mode << "'" << endl;
         cerr << "Usage:" << endl;
@@ -1036,7 +1002,6 @@ int main(int argc, char** argv) {
         return 1;
     }
     
-    // Check team name for submit mode
     if (cfg.mode == "submit") {
         if (cfg.team_name.empty()) {
             cfg.team_name = get_env_var("TEAM_NAME_ENV");
@@ -1049,15 +1014,13 @@ int main(int argc, char** argv) {
         }
     }
     
-    // Check if Multi-Concurrency Mode
     cfg.multi_conc_mode = !cfg.isl_arg.empty() && !cfg.osl_arg.empty();
     
     if (cfg.multi_conc_mode) {
-        // Validate required environment variables
         cfg.model = get_env_var("MODEL");
         if (cfg.model.empty()) {
             cerr << "ERROR: MODEL environment variable is required" << endl;
-            cerr << "Example: export MODEL='amd/DeepSeek-R1-0528-MXFP4'" << endl;
+            cerr << "Example: export MODEL='openai/gpt-oss-120b'" << endl;
             return 1;
         }
         
@@ -1078,15 +1041,11 @@ int main(int argc, char** argv) {
         return run_multi_conc_mode(cfg);
     }
     
-    // ============================================
     // Single Configuration Mode
-    // ============================================
-    
-    // Load configuration from environment
     cfg.model = get_env_var("MODEL");
     if (cfg.model.empty()) {
         cerr << "ERROR: MODEL environment variable is not set" << endl;
-        cerr << "Example: export MODEL='amd/DeepSeek-R1-0528-MXFP4'" << endl;
+        cerr << "Example: export MODEL='openai/gpt-oss-120b'" << endl;
         return 1;
     }
     
@@ -1108,7 +1067,7 @@ int main(int argc, char** argv) {
     if (!conc_str.empty()) {
         cfg.conc = stoi(conc_str);
     } else {
-        cout << "WARNING: CONC not set, using default 8" << endl;
+        cout << "WARNING: CONC not set, using default 4" << endl;
     }
     
     string isl_str = get_env_var("ISL");
@@ -1125,6 +1084,13 @@ int main(int argc, char** argv) {
         cout << "WARNING: OSL not set, using default 1024 (8k/1k)" << endl;
     }
     
+    string max_model_len_str = get_env_var("MAX_MODEL_LEN");
+    if (!max_model_len_str.empty()) {
+        cfg.max_model_len = stoi(max_model_len_str);
+    } else {
+        cout << "WARNING: MAX_MODEL_LEN not set, using default 16384" << endl;
+    }
+    
     string ratio_str = get_env_var("RANDOM_RANGE_RATIO");
     if (!ratio_str.empty()) {
         cfg.random_range_ratio = stod(ratio_str);
@@ -1138,7 +1104,7 @@ int main(int argc, char** argv) {
     if (!num_prompts_str.empty()) {
         cfg.num_prompts = stoi(num_prompts_str);
     } else {
-        cout << "WARNING: NUM_PROMPTS not set, using CONC * 10 (match InferenceX)" << endl;
+        cout << "WARNING: NUM_PROMPTS not set, calculating based on CONC (GPT-OSS: CONC * 10)" << endl;
         cfg.num_prompts = cfg.conc * 10;
     }
     
@@ -1153,22 +1119,20 @@ int main(int argc, char** argv) {
     cout << "CONC:         " << cfg.conc << endl;
     cout << "ISL:          " << cfg.isl << endl;
     cout << "OSL:          " << cfg.osl << endl;
+    cout << "MAX_MODEL_LEN: " << cfg.max_model_len << endl;
     cout << "NUM_PROMPTS:  " << cfg.num_prompts << endl;
     cout << "RESULT_FILE:  " << cfg.result_filename << ".json" << endl;
     cout << "============================================" << endl;
     cout << endl;
     
-    // Run accuracy test
     AccuracyMetrics acc_metrics;
     if (run_accuracy_test(cfg, acc_metrics) != 0) {
         return 1;
     }
     
-    // Validate accuracy
     if (validate_accuracy(acc_metrics) != 0) {
         return 1;
     }
     
-    // Run single test (handles acc/perf/submit modes)
     return run_single_test(cfg, acc_metrics);
 }

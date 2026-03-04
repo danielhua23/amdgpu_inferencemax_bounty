@@ -5,7 +5,7 @@
 //   ./gptoss_benchmark acc                                    # Run accuracy test only (ISL=8192, OSL=1024)
 //   ./gptoss_benchmark perf                                   # Run accuracy + performance tests
 //   ./gptoss_benchmark submit <team>                         # Run all tests + submit to leaderboard
-//   ./gptoss_benchmark submit <team> -isl 8192 -osl 1024     # Batch test CONC=8,32,128 + submit (only supported case)
+//   ./gptoss_benchmark submit <team> -isl 8192 -osl 1024     # Batch test CONC=4,32,128 + submit (only supported case)
 
 #include <iostream>
 #include <string>
@@ -42,7 +42,7 @@ struct Config {
     string model;
     int port = 8888;
     int tp = 8;
-    int conc = 8;
+    int conc = 4;
     int isl = 8192;
     int osl = 1024;
     int max_model_len = 16384;  // GPT-OSS specific
@@ -65,9 +65,9 @@ struct Baseline {
     double tput_per_gpu;
 };
 
-// Only ISL=8192, OSL=1024 (8k/1k) is benchmarked; CONC = 8, 32, 128
+// Only ISL=8192, OSL=1024 (8k/1k) is benchmarked; CONC = 4, 32, 128
 map<string, Baseline> BASELINES = {
-    {"8192_1024_8", {2792, 342.70, 2892.223}},
+    {"8192_1024_4", {2792, 342.70, 2892.223}},
     {"8192_1024_32", {2792, 342.70, 2892.223}},  // placeholder; update with real baseline when available
     {"8192_1024_128", {2792, 342.70, 2892.223}}, // placeholder; update with real baseline when available
 };
@@ -167,12 +167,8 @@ string extract_regex_match(const string& text, const regex& pattern, int group =
 
 string get_leaderboard_url(const string& isl, const string& osl) {
     string key = isl + "_" + osl;
-    if (key == "1024_1024") {
-        return "https://daniehua-gptoss-fp4-vllm-isl1024osl1024.hf.space";
-    } else if (key == "1024_8192") {
-        return "https://daniehua-gptoss-fp4-vllm-isl1024osl8192.hf.space";
-    } else if (key == "8192_1024") {
-        return "https://daniehua-gptoss-fp4-vllm-isl8192osl1024.hf.space";
+    if (key == "8192_1024") {
+        return "https://daniehua-gptoss-fp4-isl8192osl1024.hf.space";
     } else {
         return "ERROR: wrong isl and osl config, pls check";
     }
@@ -465,9 +461,9 @@ int process_result_json(const Config& cfg, const AccuracyMetrics& acc_metrics) {
 import json
 import sys
 
-# Baseline Data (NV-1126) - GPT-OSS; only ISL=8192, OSL=1024 (8k/1k), CONC=8,32,128
+# Baseline Data - GPT-OSS; only ISL=8192, OSL=1024 (8k/1k), CONC=4,32,128
 BASELINES = {
-    ('8192', '1024', '8'): {'median_e2e': 2792, 'median_intvty': 342.70,'tput_per_gpu': 2892.223},
+    ('8192', '1024', '4'): {'median_e2e': 2792, 'median_intvty': 342.70,'tput_per_gpu': 2892.223},
     ('8192', '1024', '32'): {'median_e2e': 2792, 'median_intvty': 342.70,'tput_per_gpu': 2892.223},
     ('8192', '1024', '128'): {'median_e2e': 2792, 'median_intvty': 342.70,'tput_per_gpu': 2892.223},
 }
@@ -832,7 +828,7 @@ int run_multi_conc_mode(Config cfg) {
         cerr << "ERROR: Only ISL=8192, OSL=1024 (8k/1k) is supported. Use: -isl 8192 -osl 1024" << endl;
         return 1;
     }
-    cout << "CONC values: 8, 32, 128" << endl;
+    cout << "CONC values: 4, 32, 128" << endl;
     string lb_url;
     if (cfg.mode == "submit") {
         cout << "Team: " << cfg.team_name << endl;
@@ -864,7 +860,7 @@ int run_multi_conc_mode(Config cfg) {
     summary << endl;
     summary.close();
     
-    vector<int> conc_values = {8, 32, 128};
+    vector<int> conc_values = {4, 32, 128};
     for (int conc : conc_values) {
         cout << endl;
         cout << "============================================" << endl;
@@ -1071,7 +1067,7 @@ int main(int argc, char** argv) {
     if (!conc_str.empty()) {
         cfg.conc = stoi(conc_str);
     } else {
-        cout << "WARNING: CONC not set, using default 8" << endl;
+        cout << "WARNING: CONC not set, using default 4" << endl;
     }
     
     string isl_str = get_env_var("ISL");

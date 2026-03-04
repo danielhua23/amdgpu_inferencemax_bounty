@@ -2,55 +2,45 @@
 
 # ============================================
 # Single Configuration Environment Variables
-# kimi int4 Benchmark - Specific CONC Value
+# GPT-OSS FP4 Benchmark on Atom - Specific CONC Value
 # ============================================
-# This script sets environment variables for single configuration testing
-# Use with: ./kimi_benchmark submit <team>
+# This script sets environment variables for single configuration testing.
+# Use with: ./gptoss_benchmark submit <team>
 #
 # Usage:
 #   source specific_conc_var.sh
-#   bash launch_vllm_server.sh  # Start server first
-#   ./kimi_benchmark submit "YourTeam"
+#   bash launch_atom_server.sh  # Start server first (in another terminal)
+#   ./gptoss_benchmark submit "YourTeam"
 
 # ============================================
-# Server Configuration
+# Server Configuration (Atom)
 # ============================================
 
-export MODEL="moonshotai/Kimi-K2.5"
+export MODEL="openai/gpt-oss-120b"
 export PORT=8888
 export TP=8
 
-# ============================================
-# Model Configuration
-# ============================================
-
-export MAX_MODEL_LEN=16384
+# Atom-specific
+export EP_SIZE=1
+export BLOCK_SIZE=16
+export DP_ATTENTION=0
 
 # ============================================
 # Testing Configuration - Single Configuration
 # ============================================
 
-# Input/Output Sequence Lengths
-export ISL=1024
+export ISL=8192
 export OSL=1024
+export CONC=4
 
-# Concurrency Level
-# we have 4,8,16,32,64,256 except 128
-export CONC=8
-
-# Random Range Ratio
 export RANDOM_RANGE_RATIO=1.0
-
 export NUM_PROMPTS=$(( CONC * 10 ))
-
-# Result Filename
 export RESULT_FILENAME="result_isl${ISL}_osl${OSL}_conc${CONC}"
 
 # ============================================
 # Team Configuration (Optional)
 # ============================================
 
-# Set your team name here (optional, can override with command line)
 # export TEAM_NAME_ENV="YourTeam"
 
 # ============================================
@@ -58,13 +48,13 @@ export RESULT_FILENAME="result_isl${ISL}_osl${OSL}_conc${CONC}"
 # ============================================
 
 echo "============================================"
-echo "Single Configuration Environment Variables Set"
+echo "Single Configuration Environment Variables Set (Atom)"
 echo "============================================"
 echo "MODEL:        $MODEL"
 echo "PORT:         $PORT"
 echo "TP:           $TP"
-echo "MAX_MODEL_LEN: $MAX_MODEL_LEN"
-echo ""
+echo "EP_SIZE:      $EP_SIZE"
+echo "BLOCK_SIZE:   $BLOCK_SIZE"
 echo "ISL:          $ISL"
 echo "OSL:          $OSL"
 echo "CONC:         $CONC"
@@ -72,8 +62,8 @@ echo "NUM_PROMPTS:  $NUM_PROMPTS"
 echo "RESULT_FILE:  $RESULT_FILENAME.json"
 echo ""
 echo "Next steps:"
-echo "1. bash launch_vllm_server.sh  # Start server"
-echo "2. Wait for server to be ready (see 'Uvicorn running...')"
-echo "3. Run test: ./kimi_benchmark submit \"YourTeam\""
+echo "1. bash launch_atom_server.sh   # Start Atom server (in one terminal)"
+echo "2. Wait for server ready (health at http://0.0.0.0:$PORT/health)"
+echo "3. In another terminal: source specific_conc_var.sh"
+echo "4. ./gptoss_benchmark submit \"YourTeam\""
 echo "============================================"
-

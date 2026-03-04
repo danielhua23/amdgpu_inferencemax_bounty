@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
 
 # ============================================
-# vLLM Server Launch Script for kimik2.5 int4
+# Atom Server Launch Script for GPT-OSS FP4
 # ============================================
-# This script launches a vLLM server with optimized settings
-# for AMD MI355X GPUs running INT4 models
+# This script launches an Atom OpenAI-compatible server with optimized settings
+# for AMD MI355X GPUs running GPT-OSS 120B FP4.
+#
+# Image: rocm/atom:rocm7.1.1-ubuntu24.04-pytorch2.9-atom0.1.1-MI350x
 #
 # Required Environment Variables:
-#   MODEL: Model path (e.g., moonshotai/Kimi-K2.5)
+#   MODEL: Model path (e.g., openai/gpt-oss-120b)
 #   PORT: Server port (default: 8888)
-#   TP: Tensor parallel size (e.g., 4, 8)
-#   MAX_MODEL_LEN: Maximum model length (default: 16384)
+#   TP: Tensor parallel size (e.g., 1, 8)
 #
 # Optional Environment Variables:
-#   GPU_MEMORY_UTIL: GPU memory utilization (default: 0.95)
-#   BLOCK_SIZE: Block size for paged attention (default: 64)
+#   EP_SIZE: Expert parallel size (default: 1); use >1 for --enable-expert-parallel
+#   BLOCK_SIZE: Block size (default: 16)
+#   ISL, OSL: For 8192/1024 (only supported case) we add --max-model-len 10240
 #   SERVER_LOG: Path to server log file (auto-generated if not set)
 
 # ============================================
@@ -23,7 +25,7 @@
 
 if [[ -z "$MODEL" ]]; then
     echo "ERROR: MODEL environment variable is required"
-    echo "Example: export MODEL=moonshotai/Kimi-K2.5"
+    echo "Example: export MODEL=openai/gpt-oss-120b"
     exit 1
 fi
 
@@ -38,68 +40,72 @@ if [[ -z "$TP" ]]; then
     exit 1
 fi
 
-if [[ -z "$MAX_MODEL_LEN" ]]; then
-    echo "WARNING: MAX_MODEL_LEN not set, using default: 16384"
-    MAX_MODEL_LEN=16384
+# ============================================
+# ROCm / device visibility
+# ============================================
+if command -v rocm-smi &>/dev/null; then
+  version=$(rocm-smi --showfw 2>/dev/null | grep MEC | head -n 1 | awk '{print $NF}')
+  if [[ -z "$version" || "$version" -lt 177 ]]; then
+    export HSA_NO_SCRATCH_RECLAIM=1
+  fi
 fi
-
-# ============================================
-# Ray compatibility (match InferenceX kimik2.5_int4_mi355x.sh)
-# ============================================
 if [[ -n "$ROCR_VISIBLE_DEVICES" ]]; then
   export HIP_VISIBLE_DEVICES="$ROCR_VISIBLE_DEVICES"
 fi
 
 # ============================================
-# Set Default Values
+# Set Defaults (from gptoss_fp4_mi355x_atom.sh)
 # ============================================
 
-GPU_MEMORY_UTIL=${GPU_MEMORY_UTIL:-0.95}
-BLOCK_SIZE=${BLOCK_SIZE:-64}
+export OMP_NUM_THREADS=1
+BLOCK_SIZE=${BLOCK_SIZE:-16}
+EP_SIZE=${EP_SIZE:-1}
+
+CALCULATED_MAX_MODEL_LEN=" --max-model-len 10240 "
+
+if [[ "$EP_SIZE" -gt 1 ]]; then
+    EP=" --enable-expert-parallel"
+else
+    EP=" "
+fi
+
+# GPT-OSS model flag (Atom)
+export ATOM_GPT_OSS_MODEL=1
 
 # ============================================
 # Create Server Log File
 # ============================================
 
 if [[ -z "$SERVER_LOG" ]]; then
-    SERVER_LOG=$(mktemp /tmp/vllm-server-XXXXXX.log)
+    SERVER_LOG=$(mktemp /tmp/atom-server-XXXXXX.log)
     echo "INFO: Server log file: $SERVER_LOG"
 fi
 
 # ============================================
-# Launch vLLM Server
+# Launch Atom Server
 # ============================================
 
 echo "============================================"
-echo "Launching vLLM Server"
+echo "Launching Atom Server (GPT-OSS FP4)"
 echo "============================================"
 echo "Model: $MODEL"
 echo "Port: $PORT"
 echo "Tensor Parallel: $TP"
-echo "Max Model Length: $MAX_MODEL_LEN"
-echo "GPU Memory Util: $GPU_MEMORY_UTIL"
 echo "Block Size: $BLOCK_SIZE"
+echo "EP_SIZE: $EP_SIZE"
 echo "Log File: $SERVER_LOG"
 echo "============================================"
-
 echo ""
-echo "⚠️  NOTE: First launch may take 20+ minutes due to JIT compilation of kernels"
-echo "⚠️  Server will run in FOREGROUND. Press Ctrl+C to stop."
-echo "⚠️  Server is ready when you see: 'Uvicorn running on http://0.0.0.0:$PORT'"
-echo ""
-echo "============================================"
-echo "Starting Server..."
+echo "Server will run in FOREGROUND. Press Ctrl+C to stop."
+echo "Server is ready when health endpoint responds: http://0.0.0.0:$PORT/health"
 echo "============================================"
 echo ""
 
 set -x
-vllm serve $MODEL --port $PORT \
---tensor-parallel-size=$TP \
---gpu-memory-utilization $GPU_MEMORY_UTIL \
---max-model-len $MAX_MODEL_LEN \
---block-size=$BLOCK_SIZE \
---disable-log-requests \
---trust-remote-code \
---mm-encoder-tp-mode data
+python3 -m atom.entrypoints.openai_server \
+    --model "$MODEL" \
+    --server-port "$PORT" \
+    -tp "$TP" \
+    --kv_cache_dtype fp8 $CALCULATED_MAX_MODEL_LEN $EP \
+    --block-size "$BLOCK_SIZE" > "$SERVER_LOG" 2>&1
 set +x
-

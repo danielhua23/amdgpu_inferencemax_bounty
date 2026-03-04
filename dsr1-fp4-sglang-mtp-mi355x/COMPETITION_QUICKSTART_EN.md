@@ -27,19 +27,19 @@
 
 ## Objective
 
-Optimize inference performance of dsr1-fp4 model **with MTP (Multi-Token Prediction)** using SGLang on single node AMD MI355X GPUs with TP8 EP1, **surpass baseline on this model**, while maintaining model accuracy >= 0.93. The server is launched with MTP (EAGLE speculative decoding) enabled via `launch_sglang_server.sh`. **Only the ISL=8192, OSL=1024 (8k/1k long-context) case is benchmarked**, with CONC = 8, 32, 128.
+Optimize inference performance of dsr1-fp4 model **with MTP (Multi-Token Prediction)** using SGLang on single node AMD MI355X GPUs with TP8 EP1, **surpass baseline on this model**, while maintaining model accuracy >= 0.93. The server is launched with MTP (EAGLE speculative decoding) enabled via `launch_sglang_server.sh`. **Only the ISL=8192, OSL=1024 (8k/1k long-context) case is benchmarked**, with CONC = 4, 32, 128.
 
 ## 📌 Important Notice
 
 - **Single benchmark case**: Only **ISL=8192, OSL=1024 (8k/1k)** is used. Multi-conc mode only accepts `-isl 8192 -osl 1024`.
-- **CONC values**: **8, 32, 128** only (set in `specific_conc_var.sh` for single runs; batch runs test all three).
+- **CONC values**: **4, 32, 128** only (set in `specific_conc_var.sh` for single runs; batch runs test all three).
 - **MTP**: The server is started with MTP (EAGLE speculative decoding) via `launch_sglang_server.sh`; no extra steps required.
 - **something you cannot change**:
   - model: amd/DeepSeek-R1-0528-mtp-mxfp4
   - TP: 8
   - ISL: 8192
   - OSL: 1024
-  - CONC: 8,32,128
+  - CONC: 4,32,128
   - NUM_PROMPTS: CONC * 10
   - basline data in dsr1_benchmark.cpp
   - others, if you're not sure, let's actively talk on discord
@@ -170,7 +170,7 @@ Development Phase (Rapid Iteration)
    - Auto-submit to Leaderboard, view ranking in real-time
   ↓
 2. Multi-Concurrency Batch Test & Submit (Approach 2)
-   - Use submit mode: `submit "Team" -isl 8192 -osl 1024` to test CONC=8,32,128 (~1–1.5 hours)
+   - Use submit mode: `submit "Team" -isl 8192 -osl 1024` to test CONC=4,32,128 (~1–1.5 hours)
    - Auto-submit all results
   ↓
 Done! View Leaderboard rankings in real-time 🎉
@@ -221,7 +221,7 @@ source specific_conc_var.sh
 
 #### Approach 2: Multi-Concurrency Batch Testing (Test All CONC with One Command) 🚀
 
-**Use Case**: Batch test CONC = 8, 32, 128 for the **only supported case ISL=8192, OSL=1024 (8k/1k)** and submit to Leaderboard
+**Use Case**: Batch test CONC = 4, 32, 128 for the **only supported case ISL=8192, OSL=1024 (8k/1k)** and submit to Leaderboard
 
 **One command to auto-test all 3 CONC values and submit! ⭐**
 
@@ -240,7 +240,7 @@ bash launch_sglang_server.sh
 docker exec -ti sglang-dev bash
 source all_conc_var.sh
 
-# 4. Submit all results for ISL=8192, OSL=1024 (auto-run CONC=8,32,128, ~45mins)
+# 4. Submit all results for ISL=8192, OSL=1024 (auto-run CONC=4,32,128, ~45mins)
 ./dsr1_benchmark submit "YourTeam" -isl 8192 -osl 1024
 
 # ========== Optional: Test without submitting, use perf mode ========== 
@@ -248,7 +248,7 @@ source all_conc_var.sh
 ```
 
 **Results auto-submit to Leaderboard**:
-- ISL=8192, OSL=1024 → https://daniehua-dsr1-fp4-sgl-isl8192osl1024.hf.space
+- ISL=8192, OSL=1024 → https://daniehua-dsr1-fp4-isl8192osl1024.hf.space
 
 **Submission Content**: Each CONC configuration submits independently, including:
 - Team name + CONC value
@@ -261,17 +261,17 @@ source all_conc_var.sh
 | Mode | Command Example | What Runs | Time (Single Config) | Use Case |
 |------|---------|---------|-------------|---------|
 | **submit** ⭐ | `./dsr1_benchmark submit "Team"` | Accuracy + Performance + Submit (ISL=8192, OSL=1024) | ~20-30 mins | **Recommended: All-in-one, view ranking real-time** |
-| **submit -isl -osl** ⭐ | `./dsr1_benchmark submit "Team" -isl 8192 -osl 1024` | Auto-test CONC=8,32,128 + Submit | ~50mins | **Recommended: Batch test and submit** |
+| **submit -isl -osl** ⭐ | `./dsr1_benchmark submit "Team" -isl 8192 -osl 1024` | Auto-test CONC=4,32,128 + Submit | ~50mins | **Recommended: Batch test and submit** |
 | **acc** | `./dsr1_benchmark acc` | Accuracy test only | ~5-10 mins | Optional: Quick accuracy validation |
 | **perf** | `./dsr1_benchmark perf` | Accuracy + Performance (no submit) | ~20-30 mins | Optional: Test performance without submitting |
-| **perf -isl -osl** | `./dsr1_benchmark perf -isl 8192 -osl 1024` | Auto-test CONC=8,32,128 (no submit) | ~45mins | Optional: Batch test without submitting |
+| **perf -isl -osl** | `./dsr1_benchmark perf -isl 8192 -osl 1024` | Auto-test CONC=4,32,128 (no submit) | ~45mins | Optional: Batch test without submitting |
 
 ## Two Testing Approaches Comparison
 
 | Approach | Recommended Command | Configs | Time Estimate | Recommended Scenario |
 |------|---------|-------|---------|---------|
 | **Approach 1: Single Config** ⭐ | `./dsr1_benchmark submit "Team"` | 1 (8k/1k, CONC from env) | ~20 mins | **Development phase rapid iteration** |
-| **Approach 2: Multi-Concurrency** ⭐ | `./dsr1_benchmark submit "Team" -isl 8192 -osl 1024` | 3 (CONC=8,32,128) | ~45mins | **Batch test all CONC** |
+| **Approach 2: Multi-Concurrency** ⭐ | `./dsr1_benchmark submit "Team" -isl 8192 -osl 1024` | 3 (CONC=4,32,128) | ~45mins | **Batch test all CONC** |
 
 **Recommended Workflow** 🎯:
 1. **Development Phase**: Use **Approach 1** (single config + submit) for rapid iteration, view Leaderboard real-time
@@ -358,19 +358,19 @@ bash launch_sglang_server.sh
 # 3. go into new window and reload env var
 docker exec -ti sglang-dev bash
 source all_conc_var.sh
-# 4. Only supported case: ISL=8192, OSL=1024 (CONC=8,32,128)
+# 4. Only supported case: ISL=8192, OSL=1024 (CONC=4,32,128)
 ./dsr1_benchmark submit "YourTeam" -isl 8192 -osl 1024
 ```
 
 **Each command will automatically**:
-- ✅ Test 3 CONC values (8, 32, 128)
+- ✅ Test 3 CONC values (4, 32, 128)
 - ✅ Run accuracy + performance tests
 - ✅ Auto-submit to Leaderboard
 - ✅ Save all results to independent directory
 - ✅ Generate summary report
 
 **Leaderboard**:
-- ISL=8192, OSL=1024 → https://daniehua-dsr1-fp4-sgl-isl8192osl1024.hf.space
+- ISL=8192, OSL=1024 → https://daniehua-dsr1-fp4-isl8192osl1024.hf.space
 
 **Result Output Example**:
 ```
@@ -380,18 +380,18 @@ Multi-Concurrency Testing Mode
 ISL: 8192
 OSL: 1024
 Mode: submit
-CONC values: 8, 32, 128
+CONC values: 4, 32, 128
 Team: YourTeam
-Leaderboard: https://daniehua-dsr1-fp4-sgl-isl8192osl1024.hf.space
+Leaderboard: https://daniehua-dsr1-fp4-isl8192osl1024.hf.space
 ============================================
 
 Results directory: batch_isl8192_osl1024_20251125_150000
 
 ============================================
-Testing CONC=8
+Testing CONC=4
 ============================================
 ... (running tests) ...
-✓ CONC=8: PASSED (180s)
+✓ CONC=4: PASSED (180s)
 ...
 ============================================
 Multi-Concurrency Test Complete!
@@ -458,12 +458,12 @@ tail -f /tmp/sglang-server-*.log
 
 ### Q: How to test specific CONC value only?
 
-Use single configuration mode (CONC must be 8, 32, or 128 for 8k/1k):
+Use single configuration mode (CONC must be 4, 32, or 128 for 8k/1k):
 
 ```bash
 cd /workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x
 
-# 1. Edit specific_conc_var.sh to modify CONC value (8, 32, or 128)
+# 1. Edit specific_conc_var.sh to modify CONC value (4, 32, or 128)
 vim specific_conc_var.sh  # e.g. CONC=32
 
 # 2. Load environment variables
@@ -477,7 +477,7 @@ Or set manually:
 ```bash
 cd /workspace/amdgpu_bounty_optimization/dsr1-fp4-sglang-mi355x
 source specific_conc_var.sh
-export CONC=32  # Override default; use 8, 32, or 128
+export CONC=32  # Override default; use 4, 32, or 128
 export NUM_PROMPTS=$((CONC * 10))
 
 # Recommended: Submit directly
@@ -494,14 +494,14 @@ export NUM_PROMPTS=$((CONC * 10))
 - **acc mode**: ~5-10 mins (Optional: Accuracy validation only)
 - **perf mode**: ~20-30 mins (Optional: Test without submitting)
 
-**Multi-Concurrency Test** (CONC=8,32,128 only):
+**Multi-Concurrency Test** (CONC=4,32,128 only):
 - **submit -isl 8192 -osl 1024**: ~20-30 mins/CONC × 3 = **~1–1.5 hours** ⭐ **Recommended**
 - **perf -isl 8192 -osl 1024**: **~45mins** (Optional)
 
 **Recommended Workflow** 🎯:
 1. **Development Phase**: Single config `submit "YourTeam"` rapid iteration (~20 mins/time)
    - See Leaderboard ranking immediately, quickly validate optimization effects
-2. **Batch Submission**: `submit "YourTeam" -isl 8192 -osl 1024` to test CONC=8,32,128 and submit (~50mins)
+2. **Batch Submission**: `submit "YourTeam" -isl 8192 -osl 1024` to test CONC=4,32,128 and submit (~50mins)
 
 💡 **Why use submit directly?**
 - ✅ All-in-one, no need to run perf then submit
@@ -529,7 +529,7 @@ Round 4: System Optimization (note: please be careful if that will benefit all t
   └─ End-to-end tuning, submit for validation after each optimization
 
 Round 5: Batch Submission
-  └─ ./dsr1_benchmark submit "YourTeam" -isl 8192 -osl 1024   # CONC=8,32,128
+  └─ ./dsr1_benchmark submit "YourTeam" -isl 8192 -osl 1024   # CONC=4,32,128
 ```
 
 **Key Advantage**: Submit directly after each optimization, view Leaderboard ranking real-time, rapid iteration!
@@ -537,7 +537,7 @@ Round 5: Batch Submission
 ## Resource Links
 
 - 🔧 [SGLang GitHub](https://github.com/sgl-project/sglang) - Inference framework
-- 📊 Leaderboard (only 8k/1k): [ISL=8192, OSL=1024](https://daniehua-dsr1-fp4-sgl-isl8192osl1024.hf.space)
+- 📊 Leaderboard (only 8k/1k): [ISL=8192, OSL=1024](https://daniehua-dsr1-fp4-isl8192osl1024.hf.space)
 
 
 **Good luck! 🚀**

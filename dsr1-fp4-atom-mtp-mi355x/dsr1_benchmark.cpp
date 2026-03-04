@@ -8,8 +8,8 @@
 //   ./dsr1_benchmark acc                           # Run accuracy test only
 //   ./dsr1_benchmark perf                          # Run accuracy + performance tests
 //   ./dsr1_benchmark submit <team>                 # Run all tests + submit to leaderboard
-//   ./dsr1_benchmark acc -isl 1024 -osl 1024       # Test CONC=4,8,16,32,64
-//   ./dsr1_benchmark submit <team> -isl 1024 -osl 8192  # Test all CONC + submit
+//   ./dsr1_benchmark acc -isl 8192 -osl 1024       # Test CONC=4,8,16,32,64
+//   ./dsr1_benchmark submit <team> -isl 8192 -osl 1024  # Test all CONC + submit
 
 #include <iostream>
 #include <string>
@@ -49,8 +49,8 @@ struct Config {
     string model;
     int port = 8888;
     int tp = 8;
-    int conc = 16;
-    int isl = 1024;
+    int conc = 4;
+    int isl = 8192;
     int osl = 1024;
     double random_range_ratio = 1.0;
     string result_filename = "result";
@@ -71,27 +71,11 @@ struct Baseline {
     double tput_per_gpu;
 };
 
-map<string, Baseline> BASELINES = {
-    // ISL-OSL=1024-1024
-    {"1024_1024_4", {6854, 135.46, 131.424}},
-    {"1024_1024_8", {8448, 114.603, 271.064}},
-    {"1024_1024_16", {10407, 83.567, 344.564}},
-    {"1024_1024_32", {13690, 71.142, 525.082}},
-    {"1024_1024_64", {18130, 55.476, 794.151}},
-    
-    // ISL-OSL=1024-8192
-    {"1024_8192_4", {54547, 132.026, 72.952}},
-    {"1024_8192_8", {64833, 113.222, 124.538}},
-    {"1024_8192_16", {78263, 86.304, 206.202}},
-    {"1024_8192_32", {99362, 72.74, 312.262}},
-    {"1024_8192_64", {124556, 58.214, 516.289}},
-    
-    // ISL-OSL=8192-1024
+map<string, Baseline> BASELINES = {    
+// Only ISL=8192, OSL=1024 (8k/1k) is benchmarked; CONC = 4, 32, 128
     {"8192_1024_4", {7694, 121.276, 517.599}},
-    {"8192_1024_8", {9709, 98.081, 838.031}},
-    {"8192_1024_16", {13235, 70.778, 1217.488}},
     {"8192_1024_32", {18146, 51.698, 1776.218}},
-    {"8192_1024_64", {32144, 38.07, 4009.706}},
+    {"8192_1024_128", {32144, 38.07, 4009.706}},
 };
 
 // ============================================
@@ -189,12 +173,8 @@ string extract_regex_match(const string& text, const regex& pattern, int group =
 
 string get_leaderboard_url(const string& isl, const string& osl) {
     string key = isl + "_" + osl;
-    if (key == "1024_1024") {
-        return "https://daniehua-dsr1-fp4-atom-mtp-isl1024osl1024.hf.space";
-    } else if (key == "1024_8192") {
-        return "https://daniehua-dsr1-fp4-atom-mtp-isl1024osl8192.hf.space";
-    } else if (key == "8192_1024") {
-        return "https://daniehua-dsr1-fp4-atom-mtp-isl8192osl1024.hf.space";
+    if (key == "8192_1024") {
+        return "https://daniehua-dsr1-fp4-isl8192osl1024.hf.space";
     } else {
         return "ERROR: wrong isl and osl config, pls check";
     }
@@ -470,28 +450,11 @@ int process_result_json(const Config& cfg, const AccuracyMetrics& acc_metrics) {
 import json
 import sys
 
-# Baseline Data (1126)
+# Baseline Data (1126) - only ISL=8192, OSL=1024 (8k/1k), CONC=4,32,128
 BASELINES = {
-    # ISL-OSL=1024-1024
-    ('1024', '1024', '4'): {'median_e2e': 6854,'median_intvty': 135.46, 'tput_per_gpu': 131.424},
-    ('1024', '1024', '8'): {'median_e2e': 8448, 'median_intvty': 114.603,'tput_per_gpu': 271.064},
-    ('1024', '1024', '16'): {'median_e2e': 10407, 'median_intvty': 83.567,'tput_per_gpu': 344.564},
-    ('1024', '1024', '32'): {'median_e2e': 13690, 'median_intvty': 71.142,'tput_per_gpu': 525.082},
-    ('1024', '1024', '64'): {'median_e2e': 18130, 'median_intvty': 55.476,'tput_per_gpu': 794.151},
-    
-    # ISL-OSL=1024-8192
-    ('1024', '8192', '4'): {'median_e2e': 54547, 'median_intvty': 132.026, 'tput_per_gpu': 72.952},
-    ('1024', '8192', '8'): {'median_e2e': 64833, 'median_intvty': 113.222,'tput_per_gpu': 124.538},
-    ('1024', '8192', '16'): {'median_e2e': 78263, 'median_intvty': 86.304,'tput_per_gpu': 206.202},
-    ('1024', '8192', '32'): {'median_e2e': 99362, 'median_intvty': 72.74,'tput_per_gpu': 312.262},
-    ('1024', '8192', '64'): {'median_e2e': 124556, 'median_intvty': 58.214,'tput_per_gpu': 516.289},
-    
-    # ISL-OSL=8192-1024
     ('8192', '1024', '4'): {'median_e2e': 7694, 'median_intvty': 121.276,'tput_per_gpu': 517.599},
-    ('8192', '1024', '8'): {'median_e2e': 9709, 'median_intvty': 98.081,'tput_per_gpu': 838.031},
-    ('8192', '1024', '16'): {'median_e2e': 13235, 'median_intvty': 70.778,'tput_per_gpu': 1217.488},
     ('8192', '1024', '32'): {'median_e2e': 18146, 'median_intvty': 51.698,'tput_per_gpu': 1776.218},
-    ('8192', '1024', '64'): {'median_e2e': 32144, 'median_intvty': 38.07,'tput_per_gpu': 4009.706},
+    ('8192', '1024', '128'): {'median_e2e': 32144, 'median_intvty': 38.07,'tput_per_gpu': 4009.706},
 }
 
 result_file = sys.argv[1]
@@ -877,8 +840,11 @@ int run_multi_conc_mode(Config cfg) {
     cout << "ISL: " << cfg.isl_arg << endl;
     cout << "OSL: " << cfg.osl_arg << endl;
     cout << "Mode: " << cfg.mode << endl;
-    cout << "CONC values: 4, 8, 32, 64, 128, 256 (1k1k) or 4, 8, 16, 32, 64, 128 (1k8k/8k1k)" << endl;
-    
+    if (cfg.isl_arg != "8192" || cfg.osl_arg != "1024") {
+        cerr << "ERROR: Only ISL=8192, OSL=1024 (8k/1k) is supported. Use: -isl 8192 -osl 1024" << endl;
+        return 1;
+    }
+    cout << "CONC values: 4, 32, 128" << endl;
     string lb_url;
     if (cfg.mode == "submit") {
         cout << "Team: " << cfg.team_name << endl;
@@ -898,14 +864,7 @@ int run_multi_conc_mode(Config cfg) {
     cout << "Results directory: " << batch_results_dir << endl;
     cout << endl;
     
-    // Determine CONC values based on ISL and OSL
-    vector<int> conc_values;
-    if (cfg.isl_arg == "1024" && cfg.osl_arg == "1024") {
-        conc_values = {4, 8, 32, 64, 128, 256};
-    } else {
-        // For 1k8k and 8k1k
-        conc_values = {4, 8, 16, 32, 64, 128};
-    }
+    vector<int> conc_values = {4, 32, 128};
     int passed = 0;
     int failed = 0;
     
@@ -1145,7 +1104,7 @@ int main(int argc, char** argv) {
     if (!conc_str.empty()) {
         cfg.conc = stoi(conc_str);
     } else {
-        cout << "WARNING: CONC not set, using default 16" << endl;
+        cout << "WARNING: CONC not set, using default 4" << endl;
     }
     
     string isl_str = get_env_var("ISL");
