@@ -71,11 +71,12 @@ struct Baseline {
     double tput_per_gpu;
 };
 
-map<string, Baseline> BASELINES = {    
-// Only ISL=8192, OSL=1024 (8k/1k) is benchmarked; CONC = 4, 32, 128
-    {"8192_1024_4", {7694, 121.276, 517.599}},
-    {"8192_1024_32", {18146, 51.698, 1776.218}},
-    {"8192_1024_128", {32144, 38.07, 4009.706}},
+// Grand Prize targets (README): e2e ms, interactivity token/s/user, tput token/s/GPU
+map<string, Baseline> BASELINES = {
+// Only ISL=8192, OSL=1024 (8k/1k); CONC = 4, 32, 128. DeepSeek-R1-MTP Track 2.
+    {"8192_1024_4", {5000, 165, 1500}},    // e2e ≤ 5 s, interactivity ≥ 165, throughput ≥ 1500
+    {"8192_1024_32", {18000, 50, 3900}},   // e2e ≤ 18 s, interactivity ≥ 50, throughput ≥ 3900
+    {"8192_1024_128", {22000, 48, 6000}}, // e2e ≤ 22 s, interactivity ≥ 48, throughput ≥ 6000
 };
 
 // ============================================
@@ -450,11 +451,11 @@ int process_result_json(const Config& cfg, const AccuracyMetrics& acc_metrics) {
 import json
 import sys
 
-# Baseline Data (1126) - only ISL=8192, OSL=1024 (8k/1k), CONC=4,32,128
+# Grand Prize targets - DeepSeek-R1-MTP Track 2; ISL=8192, OSL=1024, CONC=4,32,128
 BASELINES = {
-    ('8192', '1024', '4'): {'median_e2e': 7694, 'median_intvty': 121.276,'tput_per_gpu': 517.599},
-    ('8192', '1024', '32'): {'median_e2e': 18146, 'median_intvty': 51.698,'tput_per_gpu': 1776.218},
-    ('8192', '1024', '128'): {'median_e2e': 32144, 'median_intvty': 38.07,'tput_per_gpu': 4009.706},
+    ('8192', '1024', '4'): {'median_e2e': 5000, 'median_intvty': 165, 'tput_per_gpu': 1500},
+    ('8192', '1024', '32'): {'median_e2e': 18000, 'median_intvty': 50, 'tput_per_gpu': 3900},
+    ('8192', '1024', '128'): {'median_e2e': 22000, 'median_intvty': 48, 'tput_per_gpu': 6000},
 }
 
 result_file = sys.argv[1]

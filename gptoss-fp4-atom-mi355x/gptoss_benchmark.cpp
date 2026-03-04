@@ -65,11 +65,12 @@ struct Baseline {
     double tput_per_gpu;
 };
 
-// Only ISL=8192, OSL=1024 (8k/1k) is benchmarked; CONC = 4, 32, 128
+// Grand Prize targets (README): e2e ms, interactivity token/s/user, tput token/s/GPU
 map<string, Baseline> BASELINES = {
-    {"8192_1024_4", {2792, 342.70, 2892.223}},
-    {"8192_1024_32", {2792, 342.70, 2892.223}},  // placeholder; update with real baseline when available
-    {"8192_1024_128", {2792, 342.70, 2892.223}}, // placeholder; update with real baseline when available
+// Only ISL=8192, OSL=1024 (8k/1k); CONC = 4, 32, 128. GPT-OSS Track 1.
+    {"8192_1024_4", {3500, 270, 9500}},    // e2e ≤ 3.5 s, interactivity ≥ 270, throughput ≥ 9500
+    {"8192_1024_32", {6000, 150, 21500}},  // e2e ≤ 6 s, interactivity ≥ 150, throughput ≥ 21500
+    {"8192_1024_128", {21000, 40, 50600}}, // e2e ≤ 21 s, interactivity ≥ 40, throughput ≥ 50600
 };
 
 // ============================================
@@ -461,11 +462,11 @@ int process_result_json(const Config& cfg, const AccuracyMetrics& acc_metrics) {
 import json
 import sys
 
-# Baseline Data (NV-1126) - GPT-OSS; only ISL=8192, OSL=1024 (8k/1k), CONC=4,32,128
+# Grand Prize targets - GPT-OSS Track 1; ISL=8192, OSL=1024, CONC=4,32,128
 BASELINES = {
-    ('8192', '1024', '4'): {'median_e2e': 2792, 'median_intvty': 342.70,'tput_per_gpu': 2892.223},
-    ('8192', '1024', '32'): {'median_e2e': 2792, 'median_intvty': 342.70,'tput_per_gpu': 2892.223},
-    ('8192', '1024', '128'): {'median_e2e': 2792, 'median_intvty': 342.70,'tput_per_gpu': 2892.223},
+    ('8192', '1024', '4'): {'median_e2e': 3500, 'median_intvty': 270, 'tput_per_gpu': 9500},
+    ('8192', '1024', '32'): {'median_e2e': 6000, 'median_intvty': 150, 'tput_per_gpu': 21500},
+    ('8192', '1024', '128'): {'median_e2e': 21000, 'median_intvty': 40, 'tput_per_gpu': 50600},
 }
 
 result_file = sys.argv[1]
